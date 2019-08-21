@@ -80,3 +80,4 @@ We feel that a welcoming community is important and we ask that you follow PaySu
 PaySuper welcomes contributions from anyone and everyone. Please refer to each project's style and contribution guidelines for submitting patches and additions. In general, we follow the "fork-and-pull" Git workflow.
 
 The master branch of this repository contains the latest stable release of this component.
+
