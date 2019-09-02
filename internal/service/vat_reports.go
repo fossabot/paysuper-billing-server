@@ -456,7 +456,12 @@ func (s *Service) getVatReportTime(VatPeriodMonth int32, date time.Time) (from, 
 		nowTime = now.New(date)
 	}
 
-	switch VatPeriodMonth {
+	from = nowTime.BeginningOfDay()
+	to = nowTime.EndOfDay()
+
+	return
+
+	/*switch VatPeriodMonth {
 	case VatPeriodEvery1Month:
 		from = nowTime.BeginningOfMonth()
 		to = nowTime.EndOfMonth()
@@ -477,7 +482,7 @@ func (s *Service) getVatReportTime(VatPeriodMonth int32, date time.Time) (from, 
 	}
 
 	err = errorVatReportPeriodNotConfiguredForCountry
-	return
+	return*/
 }
 
 func (s *Service) getVatReportTimeForDate(VatPeriodMonth int32, date time.Time) (from, to time.Time, err error) {
