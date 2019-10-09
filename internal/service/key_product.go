@@ -752,7 +752,7 @@ func (s *Service) CheckSkuAndKeyProject(ctx context.Context, req *grpc.CheckSkuA
 	return nil
 }
 
-func getImageByLanguage(lng string, collection *grpc.ImageCollection) string {
+func getImageByLanguage(lng string, collection *billing.ImageCollection) string {
 	if collection == nil || collection.Images == nil {
 		return ""
 	}

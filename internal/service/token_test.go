@@ -88,7 +88,7 @@ func (suite *TokenTestSuite) SetupTest() {
 		Metadata: map[string]string{
 			"SomeKey": "SomeValue",
 		},
-		Prices: []*grpc.ProductPrice{{Currency: "USD", Amount: 1005.00}},
+		Prices: []*billing.ProductPrice{{Currency: "USD", Amount: 1005.00}},
 	}
 	product2 := &grpc.Product{
 		Object:          "product1",
@@ -106,7 +106,7 @@ func (suite *TokenTestSuite) SetupTest() {
 		Metadata: map[string]string{
 			"SomeKey": "SomeValue",
 		},
-		Prices: []*grpc.ProductPrice{{Currency: "USD", Amount: 1005.00}},
+		Prices: []*billing.ProductPrice{{Currency: "USD", Amount: 1005.00}},
 	}
 
 	err = db.Collection(collectionProduct).Insert([]interface{}{product1, product2}...)
@@ -121,7 +121,7 @@ func (suite *TokenTestSuite) SetupTest() {
 
 	redisdb := mocks.NewTestRedis()
 	suite.cache = NewCacheRedis(redisdb)
-	suite.service = NewBillingService(db, cfg, nil, nil, nil, nil, redisClient, suite.cache, mocks.NewCurrencyServiceMockOk(), mocks.NewDocumentSignerMockOk(), &reportingMocks.ReporterService{}, mocks.NewFormatterOK(), )
+	suite.service = NewBillingService(db, cfg, nil, nil, nil, nil, redisClient, suite.cache, mocks.NewCurrencyServiceMockOk(), mocks.NewDocumentSignerMockOk(), &reportingMocks.ReporterService{}, mocks.NewFormatterOK())
 
 	if err := suite.service.Init(); err != nil {
 		suite.FailNow("Billing service initialization failed", "%v", err)

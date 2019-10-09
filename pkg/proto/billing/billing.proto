@@ -87,8 +87,6 @@ message Project {
     string merchant_id = 2;
     // @inject_tag: json:"name" validate:"required"
     map<string, string> name = 3;
-    // @inject_tag: json:"image" validate:"omitempty,url"
-    string image = 4;
     //@inject_tag: json:"callback_currency" validate:"omitempty,len=3"
     string callback_currency = 5;
     //@inject_tag: json:"callback_protocol" validate:"omitempty,oneof=default empty"
@@ -139,6 +137,18 @@ message Project {
     string url_fraud_payment = 28;
     // @inject_tag: json:"url_refund_payment" validate:"omitempty,url"
     string url_refund_payment = 29;
+    //@inject_tag: json:"localizations"
+    repeated string localizations = 30;
+    //@inject_tag: json:"full_description"
+    map<string, string> full_description = 31;
+    //@inject_tag: json:"short_description"
+    map<string, string> short_description = 32;
+    //@inject_tag: json:"currencies" validate:"omitempty,dive"
+    repeated HasCurrencyItem currencies = 33;
+    //@inject_tag: json:"cover"
+    ImageCollection cover = 35;
+    //@inject_tag: json:"currencies" validate:"omitempty,dive"
+    ProjectVirtualCurrency virtual_currency = 36;
 }
 
 message ProjectOrder {
@@ -2054,4 +2064,91 @@ message OrderReceiptItem {
     string name = 1;
     //@inject_tag: json:"price"
     string price = 2;
+}
+
+message HasCurrencyItem {
+    //@inject_tag: json:"currency" validate:"required,alpha,len=3"
+    string currency = 1;
+    //@inject_tag: json:"region" validate:"required,region_price"
+    string region = 2;
+}
+
+message LocalizedUrl {
+    //@inject_tag: validate:"omitempty,uri" json:"en"
+    string en = 1;
+    //@inject_tag: validate:"omitempty,uri" json:"ru"
+    string ru = 2;
+    //@inject_tag: validate:"omitempty,uri" json:"es"
+    string es = 3;
+    //@inject_tag: validate:"omitempty,uri" json:"de"
+    string de = 4;
+    //@inject_tag: validate:"omitempty,uri" json:"zh"
+    string zh = 5;
+    //@inject_tag: validate:"omitempty,uri" json:"fr"
+    string fr = 6;
+    //@inject_tag: validate:"omitempty,uri" json:"ar"
+    string ar = 7;
+    //@inject_tag: validate:"omitempty,uri" json:"pt"
+    string pt = 8;
+    //@inject_tag: validate:"omitempty,uri" json:"it"
+    string it = 9;
+    //@inject_tag: validate:"omitempty,uri" json:"pl"
+    string pl = 10;
+    //@inject_tag: validate:"omitempty,uri" json:"el"
+    string el = 11;
+    //@inject_tag: validate:"omitempty,uri" json:"ko"
+    string ko = 12;
+    //@inject_tag: validate:"omitempty,uri" json:"ja"
+    string ja = 13;
+    //@inject_tag: validate:"omitempty,uri" json:"vl"
+    string vl = 14;
+    //@inject_tag: validate:"omitempty,uri" json:"he"
+    string he = 15;
+    //@inject_tag: validate:"omitempty,uri" json:"th"
+    string th = 16;
+    //@inject_tag: validate:"omitempty,uri" json:"cs"
+    string cs = 17;
+    //@inject_tag: validate:"omitempty,uri" json:"bg"
+    string bg = 18;
+    //@inject_tag: validate:"omitempty,uri" json:"fi"
+    string fi = 19;
+    //@inject_tag: validate:"omitempty,uri" json:"sv"
+    string sv = 20;
+    //@inject_tag: validate:"omitempty,uri" json:"da"
+    string da = 21;
+    //@inject_tag: validate:"omitempty,uri" json:"tr"
+    string tr = 22;
+}
+
+message ImageCollection {
+    //@inject_tag: validate:"omitempty,uri" json:"images"
+    LocalizedUrl images = 1;
+    //@inject_tag: json:"use_one_for_all"
+    bool use_one_for_all = 2;
+}
+
+message ProductPrice {
+    // @inject_tag: json:"amount" validate:"required,numeric,gt=0"
+    double amount = 1;
+    //@inject_tag: json:"currency" validate:"required,alpha,len=3"
+    string currency = 2;
+    //@inject_tag: json:"region" validate:"required,region_price"
+    string region = 3;
+}
+
+message ProjectVirtualCurrency {
+    //@inject_tag: json:"logo" validate:"omitempty,url"
+    string logo = 1;
+    // @inject_tag: json:"name" validate:"required,min=1"
+    map<string, string> name = 2;
+    // @inject_tag: json:"success_message" validate:"required,min=1"
+    map<string, string> success_message = 3;
+    //@inject_tag: json:"price" validate:"required,min=1,dive"
+    repeated ProductPrice price = 4;
+    //@inject_tag: json:"min_purchase_value"
+    float min_purchase_value = 5;
+    //@inject_tag: json:"max_purchase_value"
+    float max_purchase_value = 6;
+    //@inject_tag: json:"sell_count_type" validate:"omitempty,oneof=fractional integral"
+    string sell_count_type = 7;
 }

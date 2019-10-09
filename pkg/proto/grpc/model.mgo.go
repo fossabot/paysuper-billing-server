@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/globalsign/mgo/bson"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/paysuper/paysuper-billing-server/pkg/proto/billing"
 	"github.com/paysuper/paysuper-recurring-repository/tools"
 	"time"
 )
@@ -13,55 +14,55 @@ const (
 )
 
 type MgoKeyProduct struct {
-	Id              bson.ObjectId         `bson:"_id" json:"id"`
-	Object          string                `bson:"object" json:"object"`
-	Sku             string                `bson:"sku" json:"sku"`
-	Name            []*I18NTextSearchable `bson:"name" json:"name"`
-	DefaultCurrency string                `bson:"default_currency" json:"default_currency"`
-	Enabled         bool                  `bson:"enabled" json:"enabled"`
-	Platforms       []*MgoPlatformPrice   `bson:"platforms" json:"platforms"`
-	Description     map[string]string     `bson:"description" json:"description"`
-	LongDescription map[string]string     `bson:"long_description,omitempty" json:"long_description"`
-	CreatedAt       time.Time             `bson:"created_at" json:"created_at"`
-	UpdatedAt       time.Time             `bson:"updated_at" json:"updated_at"`
-	PublishedAt     *time.Time            `bson:"published_at" json:"published_at"`
-	Cover           *ImageCollection      `bson:"cover" json:"cover"`
-	Url             string                `bson:"url,omitempty" json:"url"`
-	Metadata        map[string]string     `bson:"metadata,omitempty" json:"metadata"`
-	Deleted         bool                  `bson:"deleted" json:"deleted"`
-	MerchantId      bson.ObjectId         `bson:"merchant_id" json:"-"`
-	ProjectId       bson.ObjectId         `bson:"project_id" json:"project_id"`
-	Pricing         string                `bson:"pricing" json:"pricing"`
+	Id              bson.ObjectId            `bson:"_id" json:"id"`
+	Object          string                   `bson:"object" json:"object"`
+	Sku             string                   `bson:"sku" json:"sku"`
+	Name            []*I18NTextSearchable    `bson:"name" json:"name"`
+	DefaultCurrency string                   `bson:"default_currency" json:"default_currency"`
+	Enabled         bool                     `bson:"enabled" json:"enabled"`
+	Platforms       []*MgoPlatformPrice      `bson:"platforms" json:"platforms"`
+	Description     map[string]string        `bson:"description" json:"description"`
+	LongDescription map[string]string        `bson:"long_description,omitempty" json:"long_description"`
+	CreatedAt       time.Time                `bson:"created_at" json:"created_at"`
+	UpdatedAt       time.Time                `bson:"updated_at" json:"updated_at"`
+	PublishedAt     *time.Time               `bson:"published_at" json:"published_at"`
+	Cover           *billing.ImageCollection `bson:"cover" json:"cover"`
+	Url             string                   `bson:"url,omitempty" json:"url"`
+	Metadata        map[string]string        `bson:"metadata,omitempty" json:"metadata"`
+	Deleted         bool                     `bson:"deleted" json:"deleted"`
+	MerchantId      bson.ObjectId            `bson:"merchant_id" json:"-"`
+	ProjectId       bson.ObjectId            `bson:"project_id" json:"project_id"`
+	Pricing         string                   `bson:"pricing" json:"pricing"`
 }
 
 type MgoPlatformPrice struct {
-	Prices        []*ProductPrice `bson:"prices" json:"prices"`
-	Id            string          `bson:"id" json:"id"`
-	Name          string          `bson:"name" json:"name"`
-	EulaUrl       string          `bson:"eula_url" json:"eula_url"`
-	ActivationUrl string          `bson:"activation_url" json:"activation_url"`
+	Prices        []*billing.ProductPrice `bson:"prices" json:"prices"`
+	Id            string                  `bson:"id" json:"id"`
+	Name          string                  `bson:"name" json:"name"`
+	EulaUrl       string                  `bson:"eula_url" json:"eula_url"`
+	ActivationUrl string                  `bson:"activation_url" json:"activation_url"`
 }
 
 type MgoProduct struct {
-	Id              bson.ObjectId         `bson:"_id" json:"id"`
-	Object          string                `bson:"object" json:"object"`
-	Type            string                `bson:"type" json:"type"`
-	Sku             string                `bson:"sku" json:"sku"`
-	Name            []*I18NTextSearchable `bson:"name" json:"name"`
-	DefaultCurrency string                `bson:"default_currency" json:"default_currency"`
-	Enabled         bool                  `bson:"enabled" json:"enabled"`
-	Prices          []*ProductPrice       `bson:"prices" json:"prices"`
-	Description     map[string]string     `bson:"description" json:"description"`
-	LongDescription map[string]string     `bson:"long_description,omitempty" json:"long_description"`
-	CreatedAt       time.Time             `bson:"created_at" json:"created_at"`
-	UpdatedAt       time.Time             `bson:"updated_at" json:"updated_at"`
-	Images          []string              `bson:"images,omitempty" json:"images"`
-	Url             string                `bson:"url,omitempty" json:"url"`
-	Metadata        map[string]string     `bson:"metadata,omitempty" json:"metadata"`
-	Deleted         bool                  `bson:"deleted" json:"deleted"`
-	MerchantId      bson.ObjectId         `bson:"merchant_id" json:"-"`
-	ProjectId       bson.ObjectId         `bson:"project_id" json:"project_id"`
-	Pricing         string                `bson:"pricing" json:"pricing"`
+	Id              bson.ObjectId           `bson:"_id" json:"id"`
+	Object          string                  `bson:"object" json:"object"`
+	Type            string                  `bson:"type" json:"type"`
+	Sku             string                  `bson:"sku" json:"sku"`
+	Name            []*I18NTextSearchable   `bson:"name" json:"name"`
+	DefaultCurrency string                  `bson:"default_currency" json:"default_currency"`
+	Enabled         bool                    `bson:"enabled" json:"enabled"`
+	Prices          []*billing.ProductPrice `bson:"prices" json:"prices"`
+	Description     map[string]string       `bson:"description" json:"description"`
+	LongDescription map[string]string       `bson:"long_description,omitempty" json:"long_description"`
+	CreatedAt       time.Time               `bson:"created_at" json:"created_at"`
+	UpdatedAt       time.Time               `bson:"updated_at" json:"updated_at"`
+	Images          []string                `bson:"images,omitempty" json:"images"`
+	Url             string                  `bson:"url,omitempty" json:"url"`
+	Metadata        map[string]string       `bson:"metadata,omitempty" json:"metadata"`
+	Deleted         bool                    `bson:"deleted" json:"deleted"`
+	MerchantId      bson.ObjectId           `bson:"merchant_id" json:"-"`
+	ProjectId       bson.ObjectId           `bson:"project_id" json:"project_id"`
+	Pricing         string                  `bson:"pricing" json:"pricing"`
 }
 
 type MgoUserProfileEmail struct {
@@ -245,7 +246,7 @@ func (p *Product) GetBSON() (interface{}, error) {
 	}
 
 	for _, price := range p.Prices {
-		st.Prices = append(st.Prices, &ProductPrice{
+		st.Prices = append(st.Prices, &billing.ProductPrice{
 			Currency: price.Currency,
 			Region:   price.Region,
 			Amount:   tools.FormatAmount(price.Amount),
@@ -562,10 +563,10 @@ func (p *KeyProduct) GetBSON() (interface{}, error) {
 
 	st.Platforms = make([]*MgoPlatformPrice, len(p.Platforms))
 	for i, pl := range p.Platforms {
-		var prices []*ProductPrice
-		prices = make([]*ProductPrice, len(pl.Prices))
+		var prices []*billing.ProductPrice
+		prices = make([]*billing.ProductPrice, len(pl.Prices))
 		for j, price := range pl.Prices {
-			prices[j] = &ProductPrice{
+			prices[j] = &billing.ProductPrice{
 				Currency: price.Currency,
 				Region:   price.Region,
 				Amount:   tools.FormatAmount(price.Amount),

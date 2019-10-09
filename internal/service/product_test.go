@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"github.com/jinzhu/copier"
 	"github.com/paysuper/paysuper-billing-server/internal/config"
 	"github.com/paysuper/paysuper-billing-server/internal/mocks"
 	"github.com/paysuper/paysuper-billing-server/pkg"
@@ -92,7 +93,7 @@ func (suite *ProductTestSuite) SetupTest() {
 		Description:     map[string]string{"en": "blah-blah-blah"},
 		MerchantId:      bson.NewObjectId().Hex(),
 		ProjectId:       bson.NewObjectId().Hex(),
-		Prices: []*grpc.ProductPrice{{
+		Prices: []*billing.ProductPrice{{
 			Currency: "USD",
 			Region:   "USD",
 			Amount:   1005.00,
@@ -173,7 +174,7 @@ func (suite *ProductTestSuite) TestProduct_CreateProduct_DefaultPriceError() {
 		DefaultCurrency: "RUB",
 		ProjectId:       suite.product.ProjectId,
 		MerchantId:      suite.product.MerchantId,
-		Prices: []*grpc.ProductPrice{
+		Prices: []*billing.ProductPrice{
 			{Currency: "RUB", Amount: 100},
 		},
 		Sku:             "SKU",
@@ -421,7 +422,8 @@ func (suite *ProductTestSuite) TestProduct_DeleteProduct_Ok() {
 
 func (suite *ProductTestSuite) TestProduct_ListProducts_Error() {
 	ps := &mocks.ProductServiceInterface{}
-	ps.On("List", mock2.Anything, mock2.Anything, mock2.Anything, mock2.Anything, mock2.Anything, mock2.Anything).Return(int32(0), nil, errors.New(""))
+	ps.On("List", mock2.Anything, mock2.Anything, mock2.Anything, mock2.Anything, mock2.Anything, mock2.Anything, mock2.Anything).
+		Return(int32(0), nil, errors.New(""))
 	suite.service.productService = ps
 
 	req := grpc.ListProductsRequest{}
@@ -435,7 +437,8 @@ func (suite *ProductTestSuite) TestProduct_ListProducts_Error() {
 
 func (suite *ProductTestSuite) TestProduct_ListProducts_Ok() {
 	ps := &mocks.ProductServiceInterface{}
-	ps.On("List", mock2.Anything, mock2.Anything, mock2.Anything, mock2.Anything, mock2.Anything, mock2.Anything).Return(int32(1), []*grpc.Product{}, nil)
+	ps.On("List", mock2.Anything, mock2.Anything, mock2.Anything, mock2.Anything, mock2.Anything, mock2.Anything, mock2.Anything).
+		Return(int32(1), []*grpc.Product{}, nil)
 	suite.service.productService = ps
 
 	req := grpc.ListProductsRequest{}
@@ -484,7 +487,7 @@ func (suite *ProductTestSuite) TestProduct_UpdateProductPrices_Error_NotFound() 
 	ps.On("GetById", mock2.Anything).Return(nil, errors.New(""))
 	suite.service.productService = ps
 
-	req := grpc.UpdateProductPricesRequest{Prices: []*grpc.ProductPrice{{Currency: "RUB"}}}
+	req := grpc.UpdateProductPricesRequest{Prices: []*billing.ProductPrice{{Currency: "RUB"}}}
 	res := grpc.ResponseError{}
 	err := suite.service.UpdateProductPrices(context.TODO(), &req, &res)
 
@@ -498,7 +501,7 @@ func (suite *ProductTestSuite) TestProduct_UpdateProductPrices_Error_DefaultCurr
 	ps.On("Upsert", mock2.Anything).Return(nil)
 	suite.service.productService = ps
 
-	req := grpc.UpdateProductPricesRequest{Prices: []*grpc.ProductPrice{{Currency: "RUB"}}}
+	req := grpc.UpdateProductPricesRequest{Prices: []*billing.ProductPrice{{Currency: "RUB"}}}
 	res := grpc.ResponseError{}
 	err := suite.service.UpdateProductPrices(context.TODO(), &req, &res)
 
@@ -512,7 +515,7 @@ func (suite *ProductTestSuite) TestProduct_UpdateProductPrices_Error_Upsert() {
 	ps.On("Upsert", mock2.Anything).Return(errors.New(""))
 	suite.service.productService = ps
 
-	req := grpc.UpdateProductPricesRequest{Prices: []*grpc.ProductPrice{{Currency: "RUB", Region: "RUB"}}}
+	req := grpc.UpdateProductPricesRequest{Prices: []*billing.ProductPrice{{Currency: "RUB", Region: "RUB"}}}
 	res := grpc.ResponseError{}
 	err := suite.service.UpdateProductPrices(context.TODO(), &req, &res)
 
@@ -526,7 +529,7 @@ func (suite *ProductTestSuite) TestProduct_UpdateProductPrices_Ok() {
 	ps.On("Upsert", mock2.Anything).Return(nil)
 	suite.service.productService = ps
 
-	req := grpc.UpdateProductPricesRequest{Prices: []*grpc.ProductPrice{{Currency: "RUB", Region: "RUB"}}}
+	req := grpc.UpdateProductPricesRequest{Prices: []*billing.ProductPrice{{Currency: "RUB", Region: "RUB"}}}
 	res := grpc.ResponseError{}
 	err := suite.service.UpdateProductPrices(context.TODO(), &req, &res)
 
@@ -610,7 +613,7 @@ func (suite *ProductTestSuite) TestProduct_List_Ok() {
 	if err := suite.service.productService.Upsert(suite.product); err != nil {
 		suite.Assert().NoError(err)
 	}
-	count, list := suite.service.productService.List(suite.product.MerchantId, "", "", "", 0, 10)
+	count, list := suite.service.productService.List(suite.product.MerchantId, "", "", "", 0, 10, 0)
 
 	assert.Equal(suite.T(), int32(1), count)
 	assert.Equal(suite.T(), suite.product.MerchantId, list[0].MerchantId)
@@ -622,7 +625,7 @@ func (suite *ProductTestSuite) TestProduct_List_Ok_Project() {
 	if err := suite.service.productService.Upsert(suite.product); err != nil {
 		suite.Assert().NoError(err)
 	}
-	count, list := suite.service.productService.List(suite.product.MerchantId, suite.product.ProjectId, "", "", 0, 10)
+	count, list := suite.service.productService.List(suite.product.MerchantId, suite.product.ProjectId, "", "", 0, 10, 0)
 
 	assert.Equal(suite.T(), int32(1), count)
 	assert.Equal(suite.T(), suite.product.MerchantId, list[0].MerchantId)
@@ -635,7 +638,7 @@ func (suite *ProductTestSuite) TestProduct_List_Ok_Sku() {
 	if err := suite.service.productService.Upsert(suite.product); err != nil {
 		suite.Assert().NoError(err)
 	}
-	count, list := suite.service.productService.List(suite.product.MerchantId, "", suite.product.Sku, "", 0, 10)
+	count, list := suite.service.productService.List(suite.product.MerchantId, "", suite.product.Sku, "", 0, 10, 0)
 
 	assert.Equal(suite.T(), int32(1), count)
 	assert.Equal(suite.T(), suite.product.MerchantId, list[0].MerchantId)
@@ -648,7 +651,7 @@ func (suite *ProductTestSuite) TestProduct_List_Ok_Name() {
 	if err := suite.service.productService.Upsert(suite.product); err != nil {
 		suite.Assert().NoError(err)
 	}
-	count, list := suite.service.productService.List(suite.product.MerchantId, "", "", suite.product.Name["en"], 0, 10)
+	count, list := suite.service.productService.List(suite.product.MerchantId, "", "", suite.product.Name["en"], 0, 10, 0)
 
 	assert.Equal(suite.T(), int32(1), count)
 	assert.Equal(suite.T(), suite.product.MerchantId, list[0].MerchantId)
@@ -662,7 +665,7 @@ func (suite *ProductTestSuite) TestProduct_List_Error_Empty() {
 		suite.Assert().NoError(err)
 	}
 
-	count, list := suite.service.productService.List(bson.NewObjectId().Hex(), "", "", "", 0, 10)
+	count, list := suite.service.productService.List(bson.NewObjectId().Hex(), "", "", "", 0, 10, 0)
 	assert.EqualValues(suite.T(), 0, count)
 	assert.Empty(suite.T(), list)
 }
@@ -672,7 +675,39 @@ func (suite *ProductTestSuite) TestProduct_List_Error_Offset() {
 	if err := suite.service.productService.Upsert(suite.product); err != nil {
 		suite.Assert().NoError(err)
 	}
-	count, list := suite.service.productService.List(suite.product.MerchantId, "", "", "", 5, 10)
+	count, list := suite.service.productService.List(suite.product.MerchantId, "", "", "", 5, 10, 0)
 	assert.EqualValues(suite.T(), 0, count)
 	assert.Empty(suite.T(), list)
+}
+
+func (suite *ProductTestSuite) TestProduct_List_Enable_Ok() {
+	for i := 0; i < 3; i++ {
+		product := &grpc.Product{}
+		err := copier.Copy(&product, &suite.product)
+		assert.NoError(suite.T(), err)
+		product.Id = bson.NewObjectId().Hex()
+		product.Enabled = true
+
+		err = suite.service.productService.Upsert(product)
+		assert.NoError(suite.T(), err)
+	}
+
+	for i := 0; i < 5; i++ {
+		product := &grpc.Product{}
+		err := copier.Copy(&product, &suite.product)
+		assert.NoError(suite.T(), err)
+		product.Id = bson.NewObjectId().Hex()
+		product.Enabled = false
+
+		err = suite.service.productService.Upsert(product)
+		assert.NoError(suite.T(), err)
+	}
+
+	count, list := suite.service.productService.List(suite.product.MerchantId, "", "", "", 0, 10, 1)
+	assert.EqualValues(suite.T(), 5, count)
+	assert.Len(suite.T(), list, 5)
+
+	count, list = suite.service.productService.List(suite.product.MerchantId, "", "", "", 0, 10, 2)
+	assert.EqualValues(suite.T(), 3, count)
+	assert.Len(suite.T(), list, 3)
 }

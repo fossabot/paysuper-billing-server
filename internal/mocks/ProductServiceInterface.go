@@ -54,20 +54,20 @@ func (_m *ProductServiceInterface) GetById(_a0 string) (*grpc.Product, error) {
 	return r0, r1
 }
 
-// List provides a mock function with given fields: _a0, _a1, _a2, _a3, _a4, _a5
-func (_m *ProductServiceInterface) List(_a0 string, _a1 string, _a2 string, _a3 string, _a4 int, _a5 int) (int32, []*grpc.Product) {
-	ret := _m.Called(_a0, _a1, _a2, _a3, _a4, _a5)
+// List provides a mock function with given fields: _a0, _a1, _a2, _a3, _a4, _a5, _a6
+func (_m *ProductServiceInterface) List(_a0 string, _a1 string, _a2 string, _a3 string, _a4 int, _a5 int, _a6 int32) (int32, []*grpc.Product) {
+	ret := _m.Called(_a0, _a1, _a2, _a3, _a4, _a5, _a6)
 
 	var r0 int32
-	if rf, ok := ret.Get(0).(func(string, string, string, string, int, int) int32); ok {
-		r0 = rf(_a0, _a1, _a2, _a3, _a4, _a5)
+	if rf, ok := ret.Get(0).(func(string, string, string, string, int, int, int32) int32); ok {
+		r0 = rf(_a0, _a1, _a2, _a3, _a4, _a5, _a6)
 	} else {
 		r0 = ret.Get(0).(int32)
 	}
 
 	var r1 []*grpc.Product
-	if rf, ok := ret.Get(1).(func(string, string, string, string, int, int) []*grpc.Product); ok {
-		r1 = rf(_a0, _a1, _a2, _a3, _a4, _a5)
+	if rf, ok := ret.Get(1).(func(string, string, string, string, int, int, int32) []*grpc.Product); ok {
+		r1 = rf(_a0, _a1, _a2, _a3, _a4, _a5, _a6)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).([]*grpc.Product)

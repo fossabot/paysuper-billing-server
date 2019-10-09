@@ -176,7 +176,7 @@ func (suite *ProjectCRUDTestSuite) SetupTest() {
 			Metadata: map[string]string{
 				"SomeKey": "SomeValue",
 			},
-			Prices: []*grpc.ProductPrice{{Currency: "USD", Amount: 1005.00}},
+			Prices: []*billing.ProductPrice{{Currency: "USD", Amount: 1005.00}},
 		},
 		&grpc.Product{
 			Object:          "product1",
@@ -194,7 +194,7 @@ func (suite *ProjectCRUDTestSuite) SetupTest() {
 			Metadata: map[string]string{
 				"SomeKey": "SomeValue",
 			},
-			Prices: []*grpc.ProductPrice{{Currency: "USD", Amount: 1005.00}},
+			Prices: []*billing.ProductPrice{{Currency: "USD", Amount: 1005.00}},
 		},
 		&grpc.Product{
 			Object:          "product2",
@@ -212,7 +212,7 @@ func (suite *ProjectCRUDTestSuite) SetupTest() {
 			Metadata: map[string]string{
 				"SomeKey": "SomeValue",
 			},
-			Prices: []*grpc.ProductPrice{{Currency: "USD", Amount: 1005.00}},
+			Prices: []*billing.ProductPrice{{Currency: "USD", Amount: 1005.00}},
 		},
 	}
 
@@ -261,6 +261,43 @@ func (suite *ProjectCRUDTestSuite) TestProjectCRUD_ChangeProject_NewProject_Ok()
 		MinPaymentAmount:   0,
 		MaxPaymentAmount:   15000,
 		IsProductsCheckout: false,
+		Localizations:      []string{"en", "ru"},
+		FullDescription: map[string]string{
+			"en": "It's english full description",
+			"ru": "Это полное описание на русском языке",
+		},
+		ShortDescription: map[string]string{
+			"en": "It's english short description",
+			"ru": "Это короткое описание на русском языке",
+		},
+		Currencies: []*billing.HasCurrencyItem{
+			{Currency: "USD", Region: "USD"},
+			{Currency: "RUB", Region: "Russia"},
+		},
+		Cover: &billing.ImageCollection{
+			Images: &billing.LocalizedUrl{
+				En: "http://en.localhost",
+				Ru: "http://ru.localhost",
+			},
+			UseOneForAll: true,
+		},
+		VirtualCurrency: &billing.ProjectVirtualCurrency{
+			Logo: "http://localhost",
+			Name: map[string]string{
+				"en": "It's english virtual currency name",
+				"ru": "Это название виртуальной валюты на русском языке",
+			},
+			SuccessMessage: map[string]string{
+				"en": "It's english success message",
+				"ru": "Это сообщение о успешной покупке на русском языке",
+			},
+			Price: []*billing.ProductPrice{
+				{Amount: 100, Currency: "USD", Region: "USD"},
+				{Amount: 1000, Currency: "RUB", Region: "Russia"},
+			},
+			MaxPurchaseValue: 1000000,
+			SellCountType:    "fractional",
+		},
 	}
 	rsp := &grpc.ChangeProjectResponse{}
 	err := suite.service.ChangeProject(context.TODO(), req, rsp)
@@ -281,6 +318,12 @@ func (suite *ProjectCRUDTestSuite) TestProjectCRUD_ChangeProject_NewProject_Ok()
 	assert.Equal(suite.T(), req.IsProductsCheckout, rsp.Item.IsProductsCheckout)
 	assert.Equal(suite.T(), pkg.ProjectStatusDraft, rsp.Item.Status)
 	assert.Equal(suite.T(), int32(0), rsp.Item.ProductsCount)
+	assert.Equal(suite.T(), req.Localizations, rsp.Item.Localizations)
+	assert.Equal(suite.T(), req.FullDescription, rsp.Item.FullDescription)
+	assert.Equal(suite.T(), req.ShortDescription, rsp.Item.ShortDescription)
+	assert.Equal(suite.T(), req.Currencies, rsp.Item.Currencies)
+	assert.Equal(suite.T(), req.Cover, rsp.Item.Cover)
+	assert.Equal(suite.T(), req.VirtualCurrency, rsp.Item.VirtualCurrency)
 
 	project, err := suite.service.getProjectBy(bson.M{"_id": bson.ObjectIdHex(rsp.Item.Id)})
 	assert.NoError(suite.T(), err)
@@ -296,6 +339,12 @@ func (suite *ProjectCRUDTestSuite) TestProjectCRUD_ChangeProject_NewProject_Ok()
 	assert.Equal(suite.T(), project.MaxPaymentAmount, rsp.Item.MaxPaymentAmount)
 	assert.Equal(suite.T(), project.IsProductsCheckout, rsp.Item.IsProductsCheckout)
 	assert.Equal(suite.T(), project.Status, rsp.Item.Status)
+	assert.Equal(suite.T(), project.Localizations, rsp.Item.Localizations)
+	assert.Equal(suite.T(), project.FullDescription, rsp.Item.FullDescription)
+	assert.Equal(suite.T(), project.ShortDescription, rsp.Item.ShortDescription)
+	assert.Equal(suite.T(), project.Currencies, rsp.Item.Currencies)
+	assert.Equal(suite.T(), project.Cover, rsp.Item.Cover)
+	assert.Equal(suite.T(), project.VirtualCurrency, rsp.Item.VirtualCurrency)
 
 	cProject, err := suite.service.project.GetById(project.Id)
 	assert.NoError(suite.T(), err)
@@ -309,6 +358,12 @@ func (suite *ProjectCRUDTestSuite) TestProjectCRUD_ChangeProject_NewProject_Ok()
 	assert.Equal(suite.T(), project.MaxPaymentAmount, cProject.MaxPaymentAmount)
 	assert.Equal(suite.T(), project.IsProductsCheckout, cProject.IsProductsCheckout)
 	assert.Equal(suite.T(), project.Status, cProject.Status)
+	assert.Equal(suite.T(), project.Localizations, cProject.Localizations)
+	assert.Equal(suite.T(), project.FullDescription, cProject.FullDescription)
+	assert.Equal(suite.T(), project.ShortDescription, cProject.ShortDescription)
+	assert.Equal(suite.T(), project.Currencies, cProject.Currencies)
+	assert.Equal(suite.T(), project.Cover, cProject.Cover)
+	assert.Equal(suite.T(), project.VirtualCurrency, cProject.VirtualCurrency)
 }
 
 func (suite *ProjectCRUDTestSuite) TestProjectCRUD_ChangeProject_ExistProject_Ok() {
@@ -865,4 +920,447 @@ func (suite *ProjectTestSuite) TestProject_GetProjectById_NotFound() {
 
 	assert.Error(suite.T(), err)
 	assert.Errorf(suite.T(), err, fmt.Sprintf(errorNotFound, collectionProject))
+}
+
+func (suite *ProjectCRUDTestSuite) TestProjectCRUD_ChangeProject_IncorrectCurrencies_Error() {
+	suite.service.supportedCurrencies = []string{"RUB"}
+
+	req := &billing.Project{
+		MerchantId:         suite.merchant.Id,
+		Name:               map[string]string{"en": "Unit test", "ru": "Юнит тест"},
+		CallbackCurrency:   "RUB",
+		CallbackProtocol:   pkg.ProjectCallbackProtocolEmpty,
+		LimitsCurrency:     "RUB",
+		MinPaymentAmount:   0,
+		MaxPaymentAmount:   15000,
+		IsProductsCheckout: false,
+		Localizations:      []string{"en", "ru"},
+		FullDescription: map[string]string{
+			"en": "It's english full description",
+			"ru": "Это полное описание на русском языке",
+		},
+		ShortDescription: map[string]string{
+			"en": "It's english short description",
+			"ru": "Это короткое описание на русском языке",
+		},
+		Currencies: []*billing.HasCurrencyItem{
+			{Currency: "USD", Region: "USD"},
+			{Currency: "RUB", Region: "Russia"},
+		},
+		Cover: &billing.ImageCollection{
+			Images: &billing.LocalizedUrl{
+				En: "http://en.localhost",
+				Ru: "http://ru.localhost",
+			},
+			UseOneForAll: true,
+		},
+		VirtualCurrency: &billing.ProjectVirtualCurrency{
+			Logo: "http://localhost",
+			Name: map[string]string{
+				"en": "It's english virtual currency name",
+				"ru": "Это название виртуальной валюты на русском языке",
+			},
+			SuccessMessage: map[string]string{
+				"en": "It's english success message",
+				"ru": "Это сообщение о успешной покупке на русском языке",
+			},
+			Price: []*billing.ProductPrice{
+				{Amount: 100, Currency: "USD", Region: "USD"},
+				{Amount: 1000, Currency: "RUB", Region: "Russia"},
+			},
+			MaxPurchaseValue: 1000000,
+			SellCountType:    "fractional",
+		},
+	}
+	rsp := &grpc.ChangeProjectResponse{}
+	err := suite.service.ChangeProject(context.TODO(), req, rsp)
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), pkg.ResponseStatusBadData, rsp.Status)
+	assert.Equal(suite.T(), projectErrorCurrencyIsNotSupport.Message, rsp.Message.Message)
+	assert.Equal(suite.T(), projectErrorCurrencyIsNotSupport.Code, rsp.Message.Code)
+	assert.Equal(suite.T(), "USD", rsp.Message.Details)
+}
+
+func (suite *ProjectCRUDTestSuite) TestProjectCRUD_ChangeProject_ShortDescriptionNotHaveDefaultLanguage_Error() {
+	req := &billing.Project{
+		MerchantId:         suite.merchant.Id,
+		Name:               map[string]string{"en": "Unit test", "ru": "Юнит тест"},
+		CallbackCurrency:   "RUB",
+		CallbackProtocol:   pkg.ProjectCallbackProtocolEmpty,
+		LimitsCurrency:     "RUB",
+		MinPaymentAmount:   0,
+		MaxPaymentAmount:   15000,
+		IsProductsCheckout: false,
+		Localizations:      []string{"en", "ru"},
+		FullDescription: map[string]string{
+			"en": "It's english full description",
+			"ru": "Это полное описание на русском языке",
+		},
+		ShortDescription: map[string]string{
+			"ru": "Это короткое описание на русском языке",
+		},
+		Currencies: []*billing.HasCurrencyItem{
+			{Currency: "USD", Region: "USD"},
+			{Currency: "RUB", Region: "Russia"},
+		},
+		Cover: &billing.ImageCollection{
+			Images: &billing.LocalizedUrl{
+				En: "http://en.localhost",
+				Ru: "http://ru.localhost",
+			},
+			UseOneForAll: true,
+		},
+		VirtualCurrency: &billing.ProjectVirtualCurrency{
+			Logo: "http://localhost",
+			Name: map[string]string{
+				"en": "It's english virtual currency name",
+				"ru": "Это название виртуальной валюты на русском языке",
+			},
+			SuccessMessage: map[string]string{
+				"en": "It's english success message",
+				"ru": "Это сообщение о успешной покупке на русском языке",
+			},
+			Price: []*billing.ProductPrice{
+				{Amount: 100, Currency: "USD", Region: "USD"},
+				{Amount: 1000, Currency: "RUB", Region: "Russia"},
+			},
+			MaxPurchaseValue: 1000000,
+			SellCountType:    "fractional",
+		},
+	}
+	rsp := &grpc.ChangeProjectResponse{}
+	err := suite.service.ChangeProject(context.TODO(), req, rsp)
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), pkg.ResponseStatusBadData, rsp.Status)
+	assert.Equal(suite.T(), projectErrorShortDescriptionDefaultLangRequired, rsp.Message)
+}
+
+func (suite *ProjectCRUDTestSuite) TestProjectCRUD_ChangeProject_FullDescriptionNotHaveDefaultLanguage_Error() {
+	req := &billing.Project{
+		MerchantId:         suite.merchant.Id,
+		Name:               map[string]string{"en": "Unit test", "ru": "Юнит тест"},
+		CallbackCurrency:   "RUB",
+		CallbackProtocol:   pkg.ProjectCallbackProtocolEmpty,
+		LimitsCurrency:     "RUB",
+		MinPaymentAmount:   0,
+		MaxPaymentAmount:   15000,
+		IsProductsCheckout: false,
+		Localizations:      []string{"en", "ru"},
+		FullDescription: map[string]string{
+			"ru": "Это полное описание на русском языке",
+		},
+		ShortDescription: map[string]string{
+			"en": "It's english short description",
+			"ru": "Это короткое описание на русском языке",
+		},
+		Currencies: []*billing.HasCurrencyItem{
+			{Currency: "USD", Region: "USD"},
+			{Currency: "RUB", Region: "Russia"},
+		},
+		Cover: &billing.ImageCollection{
+			Images: &billing.LocalizedUrl{
+				En: "http://en.localhost",
+				Ru: "http://ru.localhost",
+			},
+			UseOneForAll: true,
+		},
+		VirtualCurrency: &billing.ProjectVirtualCurrency{
+			Logo: "http://localhost",
+			Name: map[string]string{
+				"en": "It's english virtual currency name",
+				"ru": "Это название виртуальной валюты на русском языке",
+			},
+			SuccessMessage: map[string]string{
+				"en": "It's english success message",
+				"ru": "Это сообщение о успешной покупке на русском языке",
+			},
+			Price: []*billing.ProductPrice{
+				{Amount: 100, Currency: "USD", Region: "USD"},
+				{Amount: 1000, Currency: "RUB", Region: "Russia"},
+			},
+			MaxPurchaseValue: 1000000,
+			SellCountType:    "fractional",
+		},
+	}
+	rsp := &grpc.ChangeProjectResponse{}
+	err := suite.service.ChangeProject(context.TODO(), req, rsp)
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), pkg.ResponseStatusBadData, rsp.Status)
+	assert.Equal(suite.T(), projectErrorFullDescriptionDefaultLangRequired, rsp.Message)
+}
+
+func (suite *ProjectCRUDTestSuite) TestProjectCRUD_ChangeProject_VirtualCurrencyNameNotHaveDefaultLanguage_Error() {
+	req := &billing.Project{
+		MerchantId:         suite.merchant.Id,
+		Name:               map[string]string{"en": "Unit test", "ru": "Юнит тест"},
+		CallbackCurrency:   "RUB",
+		CallbackProtocol:   pkg.ProjectCallbackProtocolEmpty,
+		LimitsCurrency:     "RUB",
+		MinPaymentAmount:   0,
+		MaxPaymentAmount:   15000,
+		IsProductsCheckout: false,
+		Localizations:      []string{"en", "ru"},
+		FullDescription: map[string]string{
+			"en": "It's english full description",
+			"ru": "Это полное описание на русском языке",
+		},
+		ShortDescription: map[string]string{
+			"en": "It's english short description",
+			"ru": "Это короткое описание на русском языке",
+		},
+		Currencies: []*billing.HasCurrencyItem{
+			{Currency: "USD", Region: "USD"},
+			{Currency: "RUB", Region: "Russia"},
+		},
+		Cover: &billing.ImageCollection{
+			Images: &billing.LocalizedUrl{
+				En: "http://en.localhost",
+				Ru: "http://ru.localhost",
+			},
+			UseOneForAll: true,
+		},
+		VirtualCurrency: &billing.ProjectVirtualCurrency{
+			Logo: "http://localhost",
+			Name: map[string]string{
+				"ru": "Это название виртуальной валюты на русском языке",
+			},
+			SuccessMessage: map[string]string{
+				"en": "It's english success message",
+				"ru": "Это сообщение о успешной покупке на русском языке",
+			},
+			Price: []*billing.ProductPrice{
+				{Amount: 100, Currency: "USD", Region: "USD"},
+				{Amount: 1000, Currency: "RUB", Region: "Russia"},
+			},
+			MaxPurchaseValue: 1000000,
+			SellCountType:    "fractional",
+		},
+	}
+	rsp := &grpc.ChangeProjectResponse{}
+	err := suite.service.ChangeProject(context.TODO(), req, rsp)
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), pkg.ResponseStatusBadData, rsp.Status)
+	assert.Equal(suite.T(), projectErrorVirtualCurrencyNameDefaultLangRequired, rsp.Message)
+}
+
+func (suite *ProjectCRUDTestSuite) TestProjectCRUD_ChangeProject_VirtualCurrencySuccessMessageNotHaveDefaultLanguage_Error() {
+	req := &billing.Project{
+		MerchantId:         suite.merchant.Id,
+		Name:               map[string]string{"en": "Unit test", "ru": "Юнит тест"},
+		CallbackCurrency:   "RUB",
+		CallbackProtocol:   pkg.ProjectCallbackProtocolEmpty,
+		LimitsCurrency:     "RUB",
+		MinPaymentAmount:   0,
+		MaxPaymentAmount:   15000,
+		IsProductsCheckout: false,
+		Localizations:      []string{"en", "ru"},
+		FullDescription: map[string]string{
+			"en": "It's english full description",
+			"ru": "Это полное описание на русском языке",
+		},
+		ShortDescription: map[string]string{
+			"en": "It's english short description",
+			"ru": "Это короткое описание на русском языке",
+		},
+		Currencies: []*billing.HasCurrencyItem{
+			{Currency: "USD", Region: "USD"},
+			{Currency: "RUB", Region: "Russia"},
+		},
+		Cover: &billing.ImageCollection{
+			Images: &billing.LocalizedUrl{
+				En: "http://en.localhost",
+				Ru: "http://ru.localhost",
+			},
+			UseOneForAll: true,
+		},
+		VirtualCurrency: &billing.ProjectVirtualCurrency{
+			Logo: "http://localhost",
+			Name: map[string]string{
+				"en": "It's english virtual currency name",
+				"ru": "Это название виртуальной валюты на русском языке",
+			},
+			SuccessMessage: map[string]string{
+				"ru": "Это сообщение о успешной покупке на русском языке",
+			},
+			Price: []*billing.ProductPrice{
+				{Amount: 100, Currency: "USD", Region: "USD"},
+				{Amount: 1000, Currency: "RUB", Region: "Russia"},
+			},
+			MaxPurchaseValue: 1000000,
+			SellCountType:    "fractional",
+		},
+	}
+	rsp := &grpc.ChangeProjectResponse{}
+	err := suite.service.ChangeProject(context.TODO(), req, rsp)
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), pkg.ResponseStatusBadData, rsp.Status)
+	assert.Equal(suite.T(), projectErrorVirtualCurrencySuccessMessageDefaultLangRequired, rsp.Message)
+}
+
+func (suite *ProjectCRUDTestSuite) TestProjectCRUD_ChangeProject_VirtualCurrencyPriceNotSupportedCurrency_Error() {
+	suite.service.supportedCurrencies = []string{"RUB", "USD"}
+	req := &billing.Project{
+		MerchantId:         suite.merchant.Id,
+		Name:               map[string]string{"en": "Unit test", "ru": "Юнит тест"},
+		CallbackCurrency:   "RUB",
+		CallbackProtocol:   pkg.ProjectCallbackProtocolEmpty,
+		LimitsCurrency:     "RUB",
+		MinPaymentAmount:   0,
+		MaxPaymentAmount:   15000,
+		IsProductsCheckout: false,
+		Localizations:      []string{"en", "ru"},
+		FullDescription: map[string]string{
+			"en": "It's english full description",
+			"ru": "Это полное описание на русском языке",
+		},
+		ShortDescription: map[string]string{
+			"en": "It's english short description",
+			"ru": "Это короткое описание на русском языке",
+		},
+		Currencies: []*billing.HasCurrencyItem{
+			{Currency: "USD", Region: "USD"},
+			{Currency: "RUB", Region: "Russia"},
+		},
+		Cover: &billing.ImageCollection{
+			Images: &billing.LocalizedUrl{
+				En: "http://en.localhost",
+				Ru: "http://ru.localhost",
+			},
+			UseOneForAll: true,
+		},
+		VirtualCurrency: &billing.ProjectVirtualCurrency{
+			Logo: "http://localhost",
+			Name: map[string]string{
+				"en": "It's english virtual currency name",
+				"ru": "Это название виртуальной валюты на русском языке",
+			},
+			SuccessMessage: map[string]string{
+				"en": "It's english success message",
+				"ru": "Это сообщение о успешной покупке на русском языке",
+			},
+			Price: []*billing.ProductPrice{
+				{Amount: 100, Currency: "USD", Region: "USD"},
+				{Amount: 1000, Currency: "KZT", Region: "CIS"},
+			},
+			MaxPurchaseValue: 1000000,
+			SellCountType:    "fractional",
+		},
+	}
+	rsp := &grpc.ChangeProjectResponse{}
+	err := suite.service.ChangeProject(context.TODO(), req, rsp)
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), pkg.ResponseStatusBadData, rsp.Status)
+	assert.Equal(suite.T(), projectErrorVirtualCurrencyPriceCurrencyIsNotSupport.Message, rsp.Message.Message)
+	assert.Equal(suite.T(), projectErrorVirtualCurrencyPriceCurrencyIsNotSupport.Code, rsp.Message.Code)
+	assert.Equal(suite.T(), "KZT", rsp.Message.Details)
+}
+
+func (suite *ProjectCRUDTestSuite) TestProjectCRUD_ChangeProject_VirtualCurrencyPurchasesLimit_Error() {
+	req := &billing.Project{
+		MerchantId:         suite.merchant.Id,
+		Name:               map[string]string{"en": "Unit test", "ru": "Юнит тест"},
+		CallbackCurrency:   "RUB",
+		CallbackProtocol:   pkg.ProjectCallbackProtocolEmpty,
+		LimitsCurrency:     "RUB",
+		MinPaymentAmount:   0,
+		MaxPaymentAmount:   15000,
+		IsProductsCheckout: false,
+		Localizations:      []string{"en", "ru"},
+		FullDescription: map[string]string{
+			"en": "It's english full description",
+			"ru": "Это полное описание на русском языке",
+		},
+		ShortDescription: map[string]string{
+			"en": "It's english short description",
+			"ru": "Это короткое описание на русском языке",
+		},
+		Currencies: []*billing.HasCurrencyItem{
+			{Currency: "USD", Region: "USD"},
+			{Currency: "RUB", Region: "Russia"},
+		},
+		Cover: &billing.ImageCollection{
+			Images: &billing.LocalizedUrl{
+				En: "http://en.localhost",
+				Ru: "http://ru.localhost",
+			},
+			UseOneForAll: true,
+		},
+		VirtualCurrency: &billing.ProjectVirtualCurrency{
+			Logo: "http://localhost",
+			Name: map[string]string{
+				"en": "It's english virtual currency name",
+				"ru": "Это название виртуальной валюты на русском языке",
+			},
+			SuccessMessage: map[string]string{
+				"en": "It's english success message",
+				"ru": "Это сообщение о успешной покупке на русском языке",
+			},
+			Price: []*billing.ProductPrice{
+				{Amount: 100, Currency: "USD", Region: "USD"},
+				{Amount: 1000, Currency: "RUB", Region: "Russia"},
+			},
+			MinPurchaseValue: 1000,
+			MaxPurchaseValue: 100,
+			SellCountType:    "fractional",
+		},
+	}
+	rsp := &grpc.ChangeProjectResponse{}
+	err := suite.service.ChangeProject(context.TODO(), req, rsp)
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), pkg.ResponseStatusBadData, rsp.Status)
+	assert.Equal(suite.T(), projectErrorVirtualCurrencyLimitsIncorrect, rsp.Message)
+}
+
+func (suite *ProjectCRUDTestSuite) TestProjectCRUD_ChangeProject_LimitAmounts_Error() {
+	req := &billing.Project{
+		MerchantId:         suite.merchant.Id,
+		Name:               map[string]string{"en": "Unit test", "ru": "Юнит тест"},
+		CallbackCurrency:   "RUB",
+		CallbackProtocol:   pkg.ProjectCallbackProtocolEmpty,
+		MinPaymentAmount:   0,
+		MaxPaymentAmount:   15000,
+		IsProductsCheckout: false,
+		Localizations:      []string{"en", "ru"},
+		FullDescription: map[string]string{
+			"en": "It's english full description",
+			"ru": "Это полное описание на русском языке",
+		},
+		ShortDescription: map[string]string{
+			"en": "It's english short description",
+			"ru": "Это короткое описание на русском языке",
+		},
+		Currencies: []*billing.HasCurrencyItem{
+			{Currency: "USD", Region: "USD"},
+			{Currency: "RUB", Region: "Russia"},
+		},
+		Cover: &billing.ImageCollection{
+			Images: &billing.LocalizedUrl{
+				En: "http://en.localhost",
+				Ru: "http://ru.localhost",
+			},
+			UseOneForAll: true,
+		},
+		VirtualCurrency: &billing.ProjectVirtualCurrency{
+			Logo: "http://localhost",
+			Name: map[string]string{
+				"en": "It's english virtual currency name",
+				"ru": "Это название виртуальной валюты на русском языке",
+			},
+			SuccessMessage: map[string]string{
+				"en": "It's english success message",
+				"ru": "Это сообщение о успешной покупке на русском языке",
+			},
+			Price: []*billing.ProductPrice{
+				{Amount: 100, Currency: "USD", Region: "USD"},
+				{Amount: 1000, Currency: "RUB", Region: "Russia"},
+			},
+			MaxPurchaseValue: 100,
+			SellCountType:    "fractional",
+		},
+	}
+	rsp := &grpc.ChangeProjectResponse{}
+	err := suite.service.ChangeProject(context.TODO(), req, rsp)
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), pkg.ResponseStatusBadData, rsp.Status)
+	assert.Equal(suite.T(), projectErrorLimitCurrencyRequired, rsp.Message)
 }

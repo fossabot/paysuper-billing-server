@@ -299,7 +299,7 @@ message CreateOrUpdateKeyProductRequest {
     //@inject_tag: validate:"required,max=255"
     string sku = 5;
     //@inject_tag: json:"cover"
-    ImageCollection cover = 6;
+    billing.ImageCollection cover = 6;
     //@inject_tag: validate:"omitempty,url" json:"url"
     string url = 7;
     //@inject_tag: validate:"required,alpha,len=3" json:"default_currency"
@@ -846,7 +846,7 @@ message KeyProduct {
     //@inject_tag: json:"updated_at"
     google.protobuf.Timestamp updated_at = 13;
     //@inject_tag: json:"cover"
-    ImageCollection cover = 14;
+    billing.ImageCollection cover = 14;
     //@inject_tag: validate:"omitempty,url" json:"url"
     string url = 15;
     //@inject_tag: json:"metadata"
@@ -859,67 +859,13 @@ message KeyProduct {
     string pricing = 19;
 }
 
-message ImageCollection {
-    //@inject_tag: validate:"omitempty,uri" json:"images"
-    LocalizedUrl images = 1;
-    //@inject_tag: json:"use_one_for_all"
-    bool use_one_for_all = 2;
-}
-
-message LocalizedUrl {
-    //@inject_tag: validate:"omitempty,uri" json:"en"
-    string en = 1;
-    //@inject_tag: validate:"omitempty,uri" json:"ru"
-    string ru = 2;
-    //@inject_tag: validate:"omitempty,uri" json:"es"
-    string es = 3;
-    //@inject_tag: validate:"omitempty,uri" json:"de"
-    string de = 4;
-    //@inject_tag: validate:"omitempty,uri" json:"zh"
-    string zh = 5;
-    //@inject_tag: validate:"omitempty,uri" json:"fr"
-    string fr = 6;
-    //@inject_tag: validate:"omitempty,uri" json:"ar"
-    string ar = 7;
-    //@inject_tag: validate:"omitempty,uri" json:"pt"
-    string pt = 8;
-    //@inject_tag: validate:"omitempty,uri" json:"it"
-    string it = 9;
-    //@inject_tag: validate:"omitempty,uri" json:"pl"
-    string pl = 10;
-    //@inject_tag: validate:"omitempty,uri" json:"el"
-    string el = 11;
-    //@inject_tag: validate:"omitempty,uri" json:"ko"
-    string ko = 12;
-    //@inject_tag: validate:"omitempty,uri" json:"ja"
-    string ja = 13;
-    //@inject_tag: validate:"omitempty,uri" json:"vl"
-    string vl = 14;
-    //@inject_tag: validate:"omitempty,uri" json:"he"
-    string he = 15;
-    //@inject_tag: validate:"omitempty,uri" json:"th"
-    string th = 16;
-    //@inject_tag: validate:"omitempty,uri" json:"cs"
-    string cs = 17;
-    //@inject_tag: validate:"omitempty,uri" json:"bg"
-    string bg = 18;
-    //@inject_tag: validate:"omitempty,uri" json:"fi"
-    string fi = 19;
-    //@inject_tag: validate:"omitempty,uri" json:"sv"
-    string sv = 20;
-    //@inject_tag: validate:"omitempty,uri" json:"da"
-    string da = 21;
-    //@inject_tag: validate:"omitempty,uri" json:"tr"
-    string tr = 22;
-}
-
 message PlatformPrice {
     //@inject_tag: validate:"required" json:"id"
     string id = 1;
     //@inject_tag: json:"name"
     string name = 2;
     //@inject_tag: validate:"required,min=1,dive" json:"prices"
-    repeated ProductPrice prices = 3;
+    repeated billing.ProductPrice prices = 3;
     //@inject_tag: validate:"omitempty,url" json:"eula_url"
     string eula_url = 4;
     //@inject_tag: validate:"omitempty,url" json:"activation_url"
@@ -960,7 +906,7 @@ message Product {
     //@inject_tag: json:"enabled"
     bool enabled = 9;
     //@inject_tag: validate:"required,min=1,dive" json:"prices"
-    repeated ProductPrice prices = 10;
+    repeated billing.ProductPrice prices = 10;
     //@inject_tag: validate:"required" json:"description"
     map<string, string> description = 11;
     //@inject_tag: validate:"omitempty" json:"long_description"
@@ -981,15 +927,6 @@ message Product {
     string pricing = 19;
 }
 
-message ProductPrice {
-    // @inject_tag: validate:"required,numeric,gt=0" json:"amount"
-    double amount = 1;
-    //@inject_tag: validate:"required,alpha,len=3" json:"currency"
-    string currency = 2;
-    //@inject_tag: json:"region" validate:"required,region_price"
-    string region = 3;
-}
-
 message ListProductsRequest {
     //@inject_tag: json:"name"
     string name = 1;
@@ -1003,6 +940,8 @@ message ListProductsRequest {
     string merchant_id = 5;
     //@inject_tag: validate:"omitempty,hexadecimal,len=24" json:"project_id" bson:"project_id"
     string project_id = 6;
+    //@inject_tag: json:"enable"
+    int32 enable = 7;
 }
 
 message GetProductsForOrderRequest {
@@ -1510,14 +1449,14 @@ message RecommendedPriceResponse {
 
 message ProductPricesResponse {
     // @inject_tag: json:"product_price"
-    repeated ProductPrice product_price = 1;
+    repeated billing.ProductPrice product_price = 1;
 }
 
 message UpdateProductPricesRequest {
     //@inject_tag: validate:"required,hexadecimal,len=24" json:"product_id"
     string product_id = 1;
     //@inject_tag: validate:"required,min=1,dive" json:"prices"
-    repeated ProductPrice prices = 2;
+    repeated billing.ProductPrice prices = 2;
 }
 
 message UserProfilePersonal {

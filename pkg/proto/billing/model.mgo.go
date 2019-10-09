@@ -26,7 +26,6 @@ type MgoProject struct {
 	Id                       bson.ObjectId   `bson:"_id"`
 	MerchantId               bson.ObjectId   `bson:"merchant_id"`
 	Name                     []*MgoMultiLang `bson:"name"`
-	Image                    string          `bson:"image"`
 	CallbackCurrency         string          `bson:"callback_currency"`
 	CallbackProtocol         string          `bson:"callback_protocol"`
 	CreateOrderAllowedUrls   []string        `bson:"create_order_allowed_urls"`
@@ -53,6 +52,13 @@ type MgoProject struct {
 	UrlCancelPayment         string          `bson:"url_cancel_payment"`
 	UrlFraudPayment          string          `bson:"url_fraud_payment"`
 	UrlRefundPayment         string          `bson:"url_refund_payment"`
+
+	Cover            *ImageCollection        `bson:"cover"`
+	Localizations    []string                `bson:"localizations"`
+	FullDescription  map[string]string       `bson:"full_description"`
+	ShortDescription map[string]string       `bson:"short_description"`
+	Currencies       []*HasCurrencyItem      `bson:"currencies"`
+	VirtualCurrency  *ProjectVirtualCurrency `bson:"virtual_currency"`
 }
 
 type MgoMerchantLastPayout struct {
@@ -1343,7 +1349,6 @@ func (m *PriceGroup) SetBSON(raw bson.Raw) error {
 func (m *Project) GetBSON() (interface{}, error) {
 	st := &MgoProject{
 		MerchantId:               bson.ObjectIdHex(m.MerchantId),
-		Image:                    m.Image,
 		CallbackCurrency:         m.CallbackCurrency,
 		CallbackProtocol:         m.CallbackProtocol,
 		CreateOrderAllowedUrls:   m.CreateOrderAllowedUrls,
@@ -1366,6 +1371,12 @@ func (m *Project) GetBSON() (interface{}, error) {
 		UrlCancelPayment:         m.UrlCancelPayment,
 		UrlFraudPayment:          m.UrlFraudPayment,
 		UrlRefundPayment:         m.UrlRefundPayment,
+		Cover:                    m.Cover,
+		Localizations:            m.Localizations,
+		FullDescription:          m.FullDescription,
+		ShortDescription:         m.ShortDescription,
+		Currencies:               m.Currencies,
+		VirtualCurrency:          m.VirtualCurrency,
 	}
 
 	if len(m.Name) > 0 {
@@ -1423,7 +1434,6 @@ func (m *Project) SetBSON(raw bson.Raw) error {
 
 	m.Id = decoded.Id.Hex()
 	m.MerchantId = decoded.MerchantId.Hex()
-	m.Image = decoded.Image
 	m.CallbackCurrency = decoded.CallbackCurrency
 	m.CallbackProtocol = decoded.CallbackProtocol
 	m.CreateOrderAllowedUrls = decoded.CreateOrderAllowedUrls
@@ -1446,6 +1456,12 @@ func (m *Project) SetBSON(raw bson.Raw) error {
 	m.UrlCancelPayment = decoded.UrlCancelPayment
 	m.UrlFraudPayment = decoded.UrlFraudPayment
 	m.UrlRefundPayment = decoded.UrlRefundPayment
+	m.Cover = decoded.Cover
+	m.Localizations = decoded.Localizations
+	m.FullDescription = decoded.FullDescription
+	m.ShortDescription = decoded.ShortDescription
+	m.Currencies = decoded.Currencies
+	m.VirtualCurrency = decoded.VirtualCurrency
 
 	nameLen := len(decoded.Name)
 

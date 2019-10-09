@@ -120,18 +120,18 @@ func (suite *KeyProductTestSuite) Test_GetKeyProductInfo() {
 		Description:     map[string]string{"en": "blah-blah-blah"},
 		LongDescription: map[string]string{"en": "Super game steam keys"},
 		Url:             "http://test.ru/dffdsfsfs",
-		Cover:          &grpc.ImageCollection{
+		Cover: &billing.ImageCollection{
 			UseOneForAll: false,
-			Images: &grpc.LocalizedUrl{
-			En: "/home/image.jpg",
+			Images: &billing.LocalizedUrl{
+				En: "/home/image.jpg",
 			},
 		},
-		MerchantId:      merchantId,
-		ProjectId:       projectId,
+		MerchantId: merchantId,
+		ProjectId:  projectId,
 		Platforms: []*grpc.PlatformPrice{
 			{
 				Id: "steam",
-				Prices: []*grpc.ProductPrice{
+				Prices: []*billing.ProductPrice{
 					{Region: "USD", Currency: "USD", Amount: 10},
 					{Region: "EUR", Currency: "EUR", Amount: 20},
 				},
@@ -269,14 +269,14 @@ func (suite *KeyProductTestSuite) Test_GetKeyProduct() {
 		Description:     map[string]string{"en": "blah-blah-blah"},
 		LongDescription: map[string]string{"en": "Super game steam keys"},
 		Url:             "http://test.ru/dffdsfsfs",
-		Cover:          &grpc.ImageCollection{
+		Cover: &billing.ImageCollection{
 			UseOneForAll: false,
-			Images: &grpc.LocalizedUrl{
+			Images: &billing.LocalizedUrl{
 				En: "/home/image.jpg",
 			},
 		},
-		MerchantId:      merchantId,
-		ProjectId:       projectId,
+		MerchantId: merchantId,
+		ProjectId:  projectId,
 		Metadata: map[string]string{
 			"SomeKey": "SomeValue",
 		},
@@ -334,14 +334,14 @@ func (suite *KeyProductTestSuite) Test_CreateOrUpdateKeyProduct() {
 		Description:     map[string]string{"en": "blah-blah-blah"},
 		LongDescription: map[string]string{"en": "Super game steam keys"},
 		Url:             "http://test.ru/dffdsfsfs",
-		Cover:          &grpc.ImageCollection{
+		Cover: &billing.ImageCollection{
 			UseOneForAll: false,
-			Images: &grpc.LocalizedUrl{
+			Images: &billing.LocalizedUrl{
 				En: "/home/image.jpg",
 			},
 		},
-		MerchantId:      merchantId,
-		ProjectId:       projectId,
+		MerchantId: merchantId,
+		ProjectId:  projectId,
 		Metadata: map[string]string{
 			"SomeKey": "SomeValue",
 		},
@@ -492,18 +492,18 @@ func (suite *KeyProductTestSuite) createKeyProduct() *grpc.KeyProduct {
 		Description:     map[string]string{"en": "blah-blah-blah"},
 		LongDescription: map[string]string{"en": "Super game steam keys"},
 		Url:             "http://test.ru/dffdsfsfs",
-		Cover:          &grpc.ImageCollection{
+		Cover: &billing.ImageCollection{
 			UseOneForAll: false,
-			Images: &grpc.LocalizedUrl{
+			Images: &billing.LocalizedUrl{
 				En: "/home/image.jpg",
 			},
 		},
-		MerchantId:      merchantId,
-		ProjectId:       projectId,
+		MerchantId: merchantId,
+		ProjectId:  projectId,
 		Platforms: []*grpc.PlatformPrice{
 			{
 				Id: "steam",
-				Prices: []*grpc.ProductPrice{
+				Prices: []*billing.ProductPrice{
 					{Region: "USD", Currency: "USD", Amount: 66.66},
 				},
 			},
@@ -533,7 +533,7 @@ func (suite *KeyProductTestSuite) Test_UpdatePlatformPrices_WithBadPrice_Error()
 		Platforms: []*grpc.PlatformPrice{
 			{
 				Id: "steam",
-				Prices: []*grpc.ProductPrice{
+				Prices: []*billing.ProductPrice{
 					{Region: "USD", Currency: "RUB", Amount: 66.66},
 				},
 			},
@@ -560,7 +560,7 @@ func (suite *KeyProductTestSuite) Test_UpdatePlatformPrices() {
 		Platforms: []*grpc.PlatformPrice{
 			{
 				Id: "steam",
-				Prices: []*grpc.ProductPrice{
+				Prices: []*billing.ProductPrice{
 					{Region: "USD", Currency: "USD", Amount: 66.66},
 				},
 			},
@@ -587,7 +587,7 @@ func (suite *KeyProductTestSuite) Test_UpdatePlatformPrices() {
 		Platforms: []*grpc.PlatformPrice{
 			{
 				Id: "steam",
-				Prices: []*grpc.ProductPrice{
+				Prices: []*billing.ProductPrice{
 					{Region: "USD", Currency: "USD", Amount: 77.66},
 					{Region: "EUR", Currency: "EUR", Amount: 77.77},
 				},
@@ -613,7 +613,7 @@ func (suite *KeyProductTestSuite) Test_UpdatePlatformPrices() {
 				Id:            "best_store_ever",
 				EulaUrl:       "http://www.example.com",
 				ActivationUrl: "http://www.example.com",
-				Prices: []*grpc.ProductPrice{
+				Prices: []*billing.ProductPrice{
 					{Region: "RUB", Currency: "RUB", Amount: 0.01},
 					{Region: "USD", Currency: "USD", Amount: 66.66},
 				},
@@ -639,7 +639,7 @@ func (suite *KeyProductTestSuite) Test_UpdatePlatformPrices() {
 				Id:            "best_store_ever",
 				EulaUrl:       "http://www.example.com",
 				ActivationUrl: "http://www.example.com",
-				Prices: []*grpc.ProductPrice{
+				Prices: []*billing.ProductPrice{
 					{Region: "RUB", Currency: "RUB", Amount: 0.01},
 					{Region: "USD", Currency: "USD", Amount: 66.66},
 				},
@@ -648,7 +648,7 @@ func (suite *KeyProductTestSuite) Test_UpdatePlatformPrices() {
 				Id:            "another_best_store_ever",
 				EulaUrl:       "http://www.example.com",
 				ActivationUrl: "http://www.example.com",
-				Prices: []*grpc.ProductPrice{
+				Prices: []*billing.ProductPrice{
 					{Region: "RUB", Currency: "RUB", Amount: 0.01},
 					{Region: "USD", Currency: "USD", Amount: 66.66},
 				},

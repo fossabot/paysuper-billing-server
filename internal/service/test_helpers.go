@@ -763,12 +763,12 @@ func createProductsForProject(
 
 		baseAmount := 37.00 * float64(i+1)
 
-		req.Prices = append(req.Prices, &grpc.ProductPrice{
+		req.Prices = append(req.Prices, &billing.ProductPrice{
 			Currency: "USD",
 			Region:   "USD",
 			Amount:   baseAmount,
 		})
-		req.Prices = append(req.Prices, &grpc.ProductPrice{
+		req.Prices = append(req.Prices, &billing.ProductPrice{
 			Currency: "RUB",
 			Region:   "RUB",
 			Amount:   baseAmount * 65.13,
@@ -810,7 +810,7 @@ func createKeyProductsFroProject(
 			Platforms: []*grpc.PlatformPrice{
 				{
 					Id: "steam",
-					Prices: []*grpc.ProductPrice{
+					Prices: []*billing.ProductPrice{
 						{
 							Currency: "USD",
 							Region:   "USD",
