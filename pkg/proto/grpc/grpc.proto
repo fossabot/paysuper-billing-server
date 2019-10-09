@@ -414,35 +414,67 @@ message PaymentFormJsonDataProject {
     string url_fail = 3; // url to redirect user after failed payment. may be NULL if not set in project settings
 }
 
+// swagger:model BillingServer_PaymentFormJsonData
 message PaymentFormJsonData {
+    // order unique identifier
+    // required: true
     string id = 1; // order unique identifier
+    // user account, may be null
+    // required: false
     // @inject_tag: json:"account,omitempty"
     string account = 2; // user account, may be null
+    // flag to show VAT commission amount in payment form
+    // required: false
     // @inject_tag: json:"has_vat"
     bool has_vat = 3; // flag to show VAT commission amount in payment form
+    // amount of vat for payment
+    // required: false
     // @inject_tag: json:"vat"
     double vat = 4; // amount of vat for payment
+    // swagger:ignore
     double amount = 5; // payment amount without VAT commission
+   // swagger:ignore
     double total_amount = 6; // total payment amount with VAT commission
+    // swagger:ignore
     string currency = 7; // order currency
+    // swagger:ignore
     PaymentFormJsonDataProject project = 8; // contain data about project
+    // swagger:ignore
     repeated billing.PaymentFormPaymentMethod payment_methods = 9; // contain data about payment methods
+    // swagger:ignore
     string inline_form_redirect_url = 10; // url to redirect user to inline form in PSP side
+    // swagger:ignore
     string token = 11; // access token to websocket private chanel
+    // flag to get information about user real geo position
+    // required: false
     // @inject_tag: json:"user_address_data_required"
     bool user_address_data_required = 12;
+    // description TODO
+    // required: false
     // @inject_tag: json:"user_ip_data"
     UserIpData user_ip_data = 13;
+    // description TODO
+    // required: false
     // @inject_tag: json:"items" validate="omitempty,gte=1,dive"
     repeated billing.OrderItem items = 14;
+    // description TODO 
+    // required: false
     // @inject_tag: json:"-"
     string cookie = 15;
+    // description TODO
+    // required: false
     // @inject_tag: json:"email"
     string email = 16;
+    // description TODO
+    // required: false
     // @inject_tag: json:"description"
     string description = 17;
+    // description TODO 
+    // required: false
     //@inject_tag: json:"country_payments_allowed"
     bool country_payments_allowed = 18;
+    // description TODO 
+    // required: false
     //@inject_tag: json:"country_change_allowed"
     bool country_change_allowed = 19;
 }
@@ -693,11 +725,18 @@ message PaymentFormUserChangePaymentAccountRequest {
     string user_agent = 6;
 }
 
+// swagger:model BillingServer_UserIpData
 message UserIpData {
+    // description TODO
+	// required: true
     // @inject_tag: json:"country"
     string country = 1;
+    // description TODO
+	// required: true
     // @inject_tag: json:"city"
     string city = 2;
+    // description TODO
+	// required: true
     // @inject_tag: json:"zip"
     string zip = 3;
 }
@@ -1272,18 +1311,30 @@ message FindByZipCodeResponse {
     repeated billing.ZipCode items = 2;
 }
 
+// swagger:model BillingSever_ResponseError
 message ResponseError {
+    // description TODO
+	// required: true
     //@inject_tag: json:"status"
     int32 status = 1;
+    // description TODO
+	// required: true
     //@inject_tag: json:"message"
     ResponseErrorMessage message = 2;
 }
 
+// swagger:model BillingSever_ResponseErrorMessage
 message ResponseErrorMessage {
+    // description TODO
+	// required: true
     //@inject_tag: json:"code"
     string code = 1;
+    // description TODO
+	// required: true
     //@inject_tag: json:"message"
     string message = 2;
+    // description TODO
+	// required: true
     //@inject_tag: json:"details,omitempty"
     string details = 3;
 }

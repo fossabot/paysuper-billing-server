@@ -12,71 +12,123 @@ message Name {
     string ru = 2;
 }
 
+// swagger:model BillingServer_OrderCreateRequest
 message OrderCreateRequest {
+    // Project unique identifier in PaySuper payment solution
+	// required: true
     // @inject_tag: query:"PO_PROJECT_ID" form:"PO_PROJECT_ID" json:"project" validate:"omitempty,hexadecimal"
     string project_id = 1;
+	// Signature of the request to verify that the data has not been changed. This field is not required, but we recommend sending this field always.
+	// required: false
     // @inject_tag: query:"PO_SIGNATURE" form:"PO_SIGNATURE" validate:"omitempty,alphanum"
     string signature = 2;
+    // Order amount
+	// required: true
     // @inject_tag: query:"PO_AMOUNT" form:"PO_AMOUNT" json:"amount" validate:"omitempty,numeric,gte=0"
     double amount = 3;
+    // Order currency by ISO 4217 (3 chars). If this field sent, then we're process amount in this currency.
+	// required: false
     // @inject_tag: query:"PO_CURRENCY" form:"PO_CURRENCY" json:"currency" validate:"omitempty,alpha,len=3"
     string currency = 4;
+    // User unique account in the Project.
+	// required: false
     // @inject_tag: "PO_ACCOUNT" form:"PO_ACCOUNT" json:"account"`
     string account = 5;
+    // Unique order identifier in the Project. This field is not required, but we recommend sending this field always.
+	// required: false
     // @inject_tag: query:"PO_ORDER_ID" form:"PO_ORDER_ID" json:"order_id" validate:"omitempty,max=255"
     string order_id = 6;
+    // Object with any fields on the Project side that do not match the names of the reserved fields.
+	// required: false
     // @inject_tag: query:"PO_DESCRIPTION" form:"PO_DESCRIPTION" json:"description" validate:"omitempty,max=255"
     string description = 7;
+    // Payment method identifier in the PaySuper payment solution.
+	// required: false
     // @inject_tag: query:"PO_PAYMENT_METHOD" form:"PO_PAYMENT_METHOD" json:"payment_method" validate:"omitempty,max=255"
     string payment_method = 8;
+    // URL for payment data verification request to project. This field can be send if it allowed in project admin panel.
+	// required: false
     // @inject_tag: query:"PO_URL_VERIFY" form:"PO_URL_VERIFY" json:"url_verify" validate:"omitempty,url"
     string url_verify = 9;
+    // URL for payment notification request to project. This field can be send if it allowed in project admin panel.
+	// required: false
     // @inject_tag: query:"PO_URL_NOTIFY" form:"PO_URL_NOTIFY" json:"url_notify" validate:"omitempty,url"
     string url_notify = 10;
+    // URL for redirect user after successfully completed payment. This field can be send if it allowed in project admin panel.
+	// required: false
     // @inject_tag: query:"PO_URL_SUCCESS" form:"PO_URL_SUCCESS" json:"url_success" validate:"omitempty,url"
     string url_success = 11;
+    // URL for redirect user after failed payment. This field can be send if it allowed in project admin panel.
+	// required: false
     // @inject_tag: query:"PO_URL_FAIL" form:"PO_URL_FAIL" json:"url_fail" validate:"omitempty,url"
     string url_fail = 12;
+    // user (payer) email.
+	// required: false
     // @inject_tag: query:"PO_PAYER_EMAIL" form:"PO_PAYER_EMAIL" json:"payer_email" validate:"omitempty,email"
     string payer_email = 13;
+    // user (payer) phone.
+	// required: false
     // @inject_tag: query:"PO_PAYER_PHONE" form:"PO_PAYER_PHONE" json:"payer_phone" validate:"omitempty,max=255"
     string payer_phone = 14;
+    // user (payer) region code by ISO 3166-1 (2 chars) for check project packages. If this field not send, then user region will be get from user ip.
+	// required: false
     // @inject_tag: query:"PO_REGION" form:"PO_REGION" json:"region" validate:"omitempty,alpha,len=2"
     string region = 15;
+    // swagger:ignore
     string payer_ip = 16;
+    // swagger:ignore
     map<string, string> other = 17;
+    // swagger:ignore
     // @inject_tag: json:"-"
     map<string, string> raw_params = 18;
+    // swagger:ignore
     // @inject_tag: json:"-"
     string raw_body = 19; //`json:"-"`
+    // swagger:ignore
     // @inject_tag: json:"-"
     bool is_json = 20;
+    // swagger:ignore
     // @inject_tag: json:"-"
     string language = 21;
+    // Unique identifiers of Products being in the Project.
+	// required: false
     // @inject_tag: json:"products" validate:"omitempty,gte=1,dive,hexadecimal,len=24"
     repeated string products = 22;
+    // swagger:ignore
     // @inject_tag: json:"-"
     map<string, string> metadata = 23;
+    // swagger:ignore
     // @inject_tag: json:"-"
     map<string, string> private_metadata = 24;
+    // description TODO
+	// required: false
     // @inject_tag: json:"receipt_number"
     string receipt_number = 25; // payer receipt number from create order request
+    // description TODO
+	// required: false
     // @inject_tag: json:"receipt_url"
     string receipt_url = 26; // payer receipt url from create order request
+    // description TODO
+	// required: false
     // @inject_tag: json:"issuer_url"
     string issuer_url = 27;
+    // description TODO
+	// required: false
     // @inject_tag: json:"is_embedded"
     bool is_embedded = 28;
-
+    // swagger:ignore
     string token = 29;
+    // swagger:ignore
     OrderUser user = 30;
-
+    // description TODO
+	// required: false
     // @inject_tag: json:"order" validate:"omitempty,uuid"
     string psp_order_uuid = 31;
-
+    // description TODO
+	// required: true
     // @inject_tag: validate="required,oneof=simple product key" json:"type"
     string type = 32;
-
+    // swagger:ignore
     string platform_id = 33;
 }
 
@@ -560,33 +612,62 @@ message CountryRestriction {
     bool change_allowed = 3;
 }
 
+// swagger:model BillingServer_OrderItem
 message OrderItem {
+    // description TODO
+    // required: true
     //@inject_tag: validate:"required,hexadecimal,len=24" json:"id" bson:"_id"
     string id = 1;
+    // description TODO
+    // required: true
     //@inject_tag: validate:"required" json:"object" bson:"object"
     string object = 2;
+    // description TODO
+    // required: true
     //@inject_tag: validate:"required" json:"sku" bson:"sku"
     string sku = 3;
+    // description TODO
+    // required: true
     //@inject_tag: validate:"required" json:"name" bson:"name"
     string name = 4;
+    // description TODO
+    // required: true
     //@inject_tag: validate:"required" json:"description" bson:"description"
     string description = 5;
+    // description TODO
+    // required: true
     // @inject_tag: validate:"required,numeric,gt=0" json:"amount" bson:"amount"
     double amount = 6;
+    // description TODO
+    // required: true
     //@inject_tag: validate:"required,alpha,len=3" json:"currency" bson:"currency"
     string currency = 7;
+    // description TODO
+    // required: false
     //@inject_tag: validate:"dive,omitempty,uri" json:"images" bson:"images"
     repeated string images = 8;
+    // description TODO
+    // required: false
     //@inject_tag: validate:"omitempty,url" json:"url" bson:"url"
     string url = 9;
+    // description TODO
+    // required: true
     //@inject_tag: json:"metadata" bson:"metadata"
     map<string, string> metadata = 10;
+    // description TODO
+    // required: true
     //@inject_tag: json:"created_at" bson:"created_at"
     google.protobuf.Timestamp created_at = 11;
+    // description TODO
+    // required: true
     //@inject_tag: json:"updated_at" bson:"updated_at"
     google.protobuf.Timestamp updated_at = 12;
+    // description TODO
+    // required: false
     //@inject_tag: validate:"omitempty,min=3" json:"platform_id" bson:"platform_id"
     string platform_id = 13;
+    // description TODO
+    // required: false
     //@inject_tag: validate:"omitempty,min=5" json:"code" bson:"code"
     string code = 14;
 }
