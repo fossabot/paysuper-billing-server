@@ -74,7 +74,7 @@ message OrderCreateRequest {
     // @inject_tag: json:"order" validate:"omitempty,uuid"
     string psp_order_uuid = 31;
 
-    // @inject_tag: validate="required,oneof=simple product key" json:"type"
+    // @inject_tag: validate="required,oneof=simple product key virtual_currency" json:"type"
     string type = 32;
 
     string platform_id = 33;
@@ -549,7 +549,7 @@ message Order {
     string type = 53;
     // @inject_tag: json:"-"
     bool is_vat_deduction = 54;
-    // @inject_tag: validate="oneof=simple product key" json:"type"
+    // @inject_tag: validate="oneof=simple product key virtual_currency" json:"type"
     string product_type = 69;
     // @inject_tag: json:"platform_id"
     string platform_id = 70;
@@ -2146,9 +2146,9 @@ message ProjectVirtualCurrency {
     //@inject_tag: json:"price" validate:"required,min=1,dive"
     repeated ProductPrice price = 4;
     //@inject_tag: json:"min_purchase_value"
-    float min_purchase_value = 5;
+    double min_purchase_value = 5;
     //@inject_tag: json:"max_purchase_value"
-    float max_purchase_value = 6;
+    double max_purchase_value = 6;
     //@inject_tag: json:"sell_count_type" validate:"omitempty,oneof=fractional integral"
     string sell_count_type = 7;
 }

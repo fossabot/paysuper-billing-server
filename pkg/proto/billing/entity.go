@@ -1,6 +1,7 @@
 package billing
 
 import (
+	"errors"
 	"github.com/globalsign/mgo/bson"
 	"github.com/paysuper/paysuper-billing-server/pkg"
 	"github.com/paysuper/paysuper-recurring-repository/pkg/constant"
@@ -31,9 +32,10 @@ var (
 )
 
 const (
-	OrderType_simple  = "simple"
-	OrderType_key     = "key"
-	OrderType_product = "product"
+	OrderType_simple         = "simple"
+	OrderType_key            = "key"
+	OrderType_product        = "product"
+	OrderTypeVirtualCurrency = "virtual_currency"
 )
 
 func (m *Merchant) ChangesAllowed() bool {
@@ -254,4 +256,18 @@ func (pd *PayoutDocument) IsFullySigned() bool {
 
 func (m *PaymentMethodParams) IsSettingComplete() bool {
 	return m.TerminalId != "" && m.Secret != "" && m.SecretCallback != ""
+}
+
+func (m *Project) GetVirtualCurrencyRate(group *PriceGroup) (float64, error) {
+	for _, price := range m.VirtualCurrency.Price {
+		if group.Region != "" && price.Region == group.Region {
+			return price.Amount, nil
+		}
+
+		if group.Region == "" && price.Region == group.Currency {
+			return price.Amount, nil
+		}
+	}
+
+	return 0, errors.New(fmt.Sprintf(productNoPriceInCurrency, group.Region))
 }

@@ -52,8 +52,6 @@ func (s *Service) GetPriceGroup(
 	return nil
 }
 
-
-
 func (s *Service) UpdatePriceGroup(
 	ctx context.Context,
 	req *billing.PriceGroup,
@@ -352,19 +350,35 @@ func (h PriceGroup) Update(pg *billing.PriceGroup) error {
 func (h PriceGroup) GetById(id string) (*billing.PriceGroup, error) {
 	var c billing.PriceGroup
 	key := fmt.Sprintf(cachePriceGroupId, id)
+	err := h.svc.cacher.Get(key, c)
 
-	if err := h.svc.cacher.Get(key, c); err == nil {
+	if err == nil {
 		return &c, nil
 	}
 
-	err := h.svc.db.Collection(collectionPriceGroup).Find(bson.M{"_id": bson.ObjectIdHex(id), "is_active": true}).One(&c)
+	query := bson.M{"_id": bson.ObjectIdHex(id), "is_active": true}
+	err = h.svc.db.Collection(collectionPriceGroup).Find(query).One(&c)
 
 	if err != nil {
+		zap.L().Error(
+			our.ErrorDatabaseQueryFailed,
+			zap.Error(err),
+			zap.String(our.ErrorDatabaseFieldCollection, collectionPriceGroup),
+			zap.Any(our.ErrorDatabaseFieldQuery, query),
+		)
 		return nil, fmt.Errorf(errorNotFound, collectionPriceGroup)
 	}
 
-	if err := h.svc.cacher.Set(key, c, 0); err != nil {
-		zap.S().Errorf("Unable to set cache", "err", err.Error(), "key", key, "data", c)
+	err = h.svc.cacher.Set(key, c, 0)
+
+	if err != nil {
+		zap.L().Error(
+			our.ErrorCacheQueryFailed,
+			zap.Error(err),
+			zap.String(our.ErrorCacheFieldCmd, "SET"),
+			zap.String(our.ErrorCacheFieldKey, key),
+			zap.Any(our.ErrorDatabaseFieldQuery, c),
+		)
 	}
 
 	return &c, nil

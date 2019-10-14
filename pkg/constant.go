@@ -63,8 +63,6 @@ const (
 	ResponseStatusSystemError = int32(500)
 	ResponseStatusTemporary   = int32(410)
 
-	SystemUserId = "000000000000000000000000"
-
 	RefundStatusCreated               = int32(0)
 	RefundStatusRejected              = int32(1)
 	RefundStatusInProgress            = int32(2)
@@ -288,6 +286,11 @@ const (
 	PayoutDocumentStatusPaid       = "paid"
 	PayoutDocumentStatusCanceled   = "canceled"
 	PayoutDocumentStatusFailed     = "failed"
+
+	ProjectSellCountTypeFractional = "fractional"
+	ProjectSellCountTypeIntegral   = "integral"
+
+	FallbackCurrency = "USD"
 )
 
 var (
