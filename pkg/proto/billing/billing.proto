@@ -441,11 +441,19 @@ message OrderTax {
 }
 
 message OrderBillingAddress {
+    // The user's country. Two-letter language code by ISO 639-1, in lowercase.
+    // required: true
     // @inject_tag: validate:"omitempty,alpha,len=2"
     string country = 1;
+    // The user's city.
+    // required: true
     string city = 2;
+    // The user's postal code.
+    // required: true
     // @inject_tag: bson:"postal_code"
     string postal_code = 3;
+    // The user's state.
+    // required: true
     string state = 4;
 }
 
@@ -1008,83 +1016,149 @@ message Customer {
 }
 
 message TokenUserEmailValue {
+    // The user's email address.
+    // required: true
     //@inject_tag: validate:"omitempty,email"
     string value = 1;
+    // Whether the user's email address has been verified on the merchant side.
+    // required: true
     bool verified = 2;
 }
 
 message TokenUserPhoneValue {
+    // The user's phone number.
+    // required: true
     //@inject_tag: validate:"omitempty,phone"
     string value = 1;
+    // Whether the user’s phone number has been verified on the merchant side.
+    // required: true
     bool verified = 2;
 }
 
 message TokenUserIpValue {
+    // A parameter value.
+    // required: true
     //@inject_tag: validate:"omitempty,ip"
     string value = 1;
 }
 
 message TokenUserLocaleValue {
+    // A parameter value.
+    // required: true
     //@inject_tag: validate:"omitempty,alpha,len=2"
     string value = 1;
 }
 
 message TokenUserValue {
+    // A parameter value.
+    // required: true
     string value = 1;
 }
 
 message TokenUser {
+    // The ID of the user stored on a merchant side.
+    // required: false
     string id = 1;
+    // The email address of the user placing the order.
+    // required: false
     TokenUserEmailValue email = 2;
+    // The phone of the user placing the order.
+    // required: false
     TokenUserPhoneValue phone = 4;
+    // The user's name.
+    // required: false
     TokenUserValue name = 6;
+    // The user's IP address.
+    // required: false
     TokenUserIpValue ip = 7;
+    // The user's locale name. Two-letter language code by ISO 639-1, in lowercase.
+    // required: false
     TokenUserLocaleValue locale = 8;
+    // Details of the user's address.
+    // required: false
     OrderBillingAddress address = 9;
+    // A set of key-value pairs that you can attach to the user object. It can be useful for storing additional information about the user.
+    // required: false
     map<string, string> metadata = 10;
+    // The value of the User-Agent request HTTP header that contains a characteristic string that allows the network protocol peers to identify the application type, operating system, software vendor or software version of the requesting software user agent.
+    // required: false
     //@inject_tag: json:"-"
     string user_agent = 11;
+    // The value of the Accept-Language request HTTP header that advertises which languages the client is able to understand.
+    // required: false
     //@inject_tag: json:"-"
     string accept_language = 12;
 }
 
 message TokenSettingsReturnUrl {
+    // The URL to redirect the user after a successful payment.
+    // required: false
     //@inject_tag: validate:"omitempty,url"
     string success = 1;
+    // The URL to redirect the user after a failure payment.
+    // required: false
     //@inject_tag: validate:"omitempty,url"
     string fail = 2;
 }
 
 message TokenSettingsItem {
+    // The ID for Stock Keeping Units (SKU) of the item.
+    // required: true
     //@inject_tag: validate:"required"
     string sku = 1;
+    // The price of the item as a positive number. It is required for a simple checkout payment.
+    // required: true
     //@inject_tag: validate:"required,numeric,gt=0"
     double amount = 5;
+    // The currency of the item. Three-letter Currency Code ISO 4217, in uppercase.
+    // required: true
     //@inject_tag: validate:"required,alpha,len=3"
     string currency = 4;
 }
 
 message TokenSettings {
+    // The ID of the Project found in your merchant account in the PaySuper Admin. A 24 character long hexadecimal string. It is required for a simple checkout payment.
+    // required: true
     //@inject_tag: json:"project_id" validate:"required,hexadecimal,len=24"
     string project_id = 2;
+    // Where to redirect the user after a completed payment. 
+    // required: false
     //@inject_tag: json:"return_url"
     TokenSettingsReturnUrl return_url = 3;
+    // The currency of the order item. Three-letter Currency Code ISO 4217, in uppercase. If provided, the amount will be processed in this currency. It is required for a simple checkout payment.
+    // required: false
     //@inject_tag: json:"currency" validate:"omitempty,alpha,len=3"
     string currency = 4;
+    // The price of the item as a positive number. It is required for a simple checkout payment.
+    // required: false
     //@inject_tag: json:"amount" validate:"omitempty,numeric,gt=0"
     double amount = 5;
+    // Unique identifier for the payment method.
+    // requires: false
     //@inject_tag: json:"payment_method"
     string payment_method = 6;
+    // An array contains information about items which the user will pay for. It is required for a payment that differs from a simple checkout.
+    // required: false
     //@inject_tag: json:"items"
     repeated TokenSettingsItem items = 7;
+    // An arbitrary string attached to the order object. Often useful for displaying to users.
+    // required: false
     //@inject_tag: json:"description"
     string description = 8;
+    // The IDs of items which the user will pay for. It is required for a payment that differs from a simple checkout.
+    // required: false
     //@inject_tag: json:"products_ids"
     repeated string products_ids = 9;
+    // A set of key-value pairs that you can attach to the order object. This data will be returned in a Project payment notification.
+    // required: false
     //@inject_tag: json:"metadata"
     map<string, string> metadata = 10;
+    // Unique identifier for one of DRM platforms.
+    // required: false
     //@inject_tag: json:"platform_id"
     string platform_id = 11;
+    // The payment order type that depends on your products in the payment order: set a type to 'product' for a Virtual item, 'key' for a Game key, 'virtual_currency' for a Virtual currency. Default type is set to 'simple' for a simple checkout payment.
+    // required: false
     //@inject_tag: json:"type"
     string type = 12;
 }

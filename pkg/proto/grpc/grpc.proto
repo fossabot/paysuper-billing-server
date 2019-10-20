@@ -1147,9 +1147,14 @@ message ListProjectsResponse {
     repeated billing.Project items = 2;
 }
 
+// swagger:model BillingServer_TokenRequest
 message TokenRequest {
+    // Detailed information about the user.
+    // required: true
     //@inject_tag: validate:"required"
     billing.TokenUser user = 1;
+    // Detailed information about the order.
+    // required: true
     //@inject_tag: validate:"required"
     billing.TokenSettings settings = 2;
 }
@@ -1311,30 +1316,25 @@ message FindByZipCodeResponse {
     repeated billing.ZipCode items = 2;
 }
 
-// swagger:model BillingSever_ResponseError
 message ResponseError {
-    // description TODO
-	// required: true
     //@inject_tag: json:"status"
     int32 status = 1;
-    // description TODO
-	// required: true
     //@inject_tag: json:"message"
     ResponseErrorMessage message = 2;
 }
 
 // swagger:model BillingSever_ResponseErrorMessage
 message ResponseErrorMessage {
-    // description TODO
+    // A status code of the error.
 	// required: true
     //@inject_tag: json:"code"
     string code = 1;
-    // description TODO
+    // A description of the error.
 	// required: true
     //@inject_tag: json:"message"
     string message = 2;
-    // description TODO
-	// required: true
+    // Additional information about the error.
+	// required: false
     //@inject_tag: json:"details,omitempty"
     string details = 3;
 }
