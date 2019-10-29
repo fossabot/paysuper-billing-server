@@ -580,6 +580,8 @@ message Order {
     bool is_key_product_notified = 72;
     // @inject_tag: json:"receipt_id" bson:"receipt_id"
     string receipt_id = 73; // unique public receipt identifier
+    // @inject_tag: json:"virtual_currency_amount" bson:"virtual_currency_amount"
+    double virtual_currency_amount = 74;
 }
 
 message CountryRestriction {

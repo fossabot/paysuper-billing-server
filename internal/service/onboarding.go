@@ -48,6 +48,8 @@ var (
 	merchantTariffsNotFound                   = newBillingServerErrorMsg("mr000023", "tariffs for merchant not found")
 	merchantPayoutCurrencyMissed              = newBillingServerErrorMsg("mr000024", "merchant don't have payout currency")
 
+	virtualCurrencyPayoutCurrencyMissed       = newBillingServerErrorMsg("vc000001", "virtual currency don't have price in merchant payout currency")
+
 	merchantSignAgreementMessage        = map[string]string{"code": "mr000017", "message": "license agreement was signed by merchant"}
 	merchantAgreementReadyToSignMessage = map[string]interface{}{"code": "mr000025", "generated": true, "message": "merchant license agreement ready to sign"}
 
