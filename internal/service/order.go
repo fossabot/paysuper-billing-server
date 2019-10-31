@@ -135,6 +135,8 @@ var (
 	orderErrorVirtualCurrencyLimits                           = newBillingServerErrorMsg("fm000067", "amount of order is more than max amount or less than minimal amount for virtual currency")
 	orderErrorVirtualCurrencyUserCountryRequired              = newBillingServerErrorMsg("fm000068", "request for create payment by project virtual currency must contain user data with required field country")
 	orderErrorCheckoutWithProducts                            = newBillingServerErrorMsg("fm000069", "request to processing simple payment can't contain products list")
+
+	virtualCurrencyPayoutCurrencyMissed       = newBillingServerErrorMsg("vc000001", "virtual currency don't have price in merchant payout currency")
 )
 
 type orderCreateRequestProcessorChecked struct {
@@ -3074,6 +3076,8 @@ func (s *Service) ProcessOrderVirtualCurrency(ctx context.Context, order *billin
 	currency = defaultCurrency
 	priceGroup = defaultPriceGroup
 
+	country = order.GetCountry()
+
 	if country != "" {
 		countryData, err := s.country.GetByIsoCodeA2(country)
 		if err != nil {
@@ -3092,7 +3096,7 @@ func (s *Service) ProcessOrderVirtualCurrency(ctx context.Context, order *billin
 
 	zap.S().Infow("try to use detected currency for order amount", "currency", currency, "order.Uuid", order.Uuid)
 
-	project, err := s.getProjectBy(bson.M{"_id": bson.ObjectIdHex(order.GetProjectId())})
+	project, err := s.project.GetById(order.GetProjectId())
 
 	if project == nil || project.VirtualCurrency == nil {
 		return orderErrorVirtualCurrencyNotFilled
@@ -3111,37 +3115,11 @@ func (s *Service) ProcessOrderVirtualCurrency(ctx context.Context, order *billin
 		}
 	}
 
-	merAccAmount := amount
-	if currency != defaultCurrency {
-		req := &currencies.ExchangeCurrencyCurrentForMerchantRequest{
-			From:       currency,
-			To:         defaultCurrency,
-			MerchantId: order.GetMerchantId(),
-			RateType:   curPkg.RateTypeOxr,
-			Amount:     amount,
-		}
-
-		rsp, err := s.curService.ExchangeCurrencyCurrentForMerchant(context.TODO(), req)
-
-		if err != nil {
-			zap.L().Error(
-				pkg.ErrorGrpcServiceCallFailed,
-				zap.Error(err),
-				zap.String(errorFieldService, "CurrencyRatesService"),
-				zap.String(errorFieldMethod, "ExchangeCurrencyCurrentForMerchant"),
-			)
-
-			return orderErrorConvertionCurrency
-		}
-		merAccAmount = rsp.ExchangedAmount
-	}
-
 	amount = tools.FormatAmount(amount)
-	merAccAmount = tools.FormatAmount(merAccAmount)
 
 	order.Currency = currency
 	order.OrderAmount = amount
-	order.TotalPaymentAmount = merAccAmount
+	order.TotalPaymentAmount = amount
 
 	return nil
 }
@@ -4012,9 +3990,6 @@ func (v *OrderCreateRequestProcessor) processVirtualCurrency() error {
 		return orderErrorVirtualCurrencyLimits
 	}
 
-	if v.checked.user == nil && v.checked.user.Address == nil {
-		return nil
-	}
 	v.checked.virtualAmount = amount
 	return nil
 }
