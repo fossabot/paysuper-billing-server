@@ -665,7 +665,7 @@ func (s *Service) PaymentFormJsonDataProcess(
 
 	switch order.ProductType {
 	case billing.OrderType_product:
-		err = s.ProcessOrderProducts(order)
+		err = s.ProcessOrderProducts(ctx, order)
 		break
 	case billing.OrderType_key:
 		rsp.Item.Platforms, err = s.ProcessOrderKeyProducts(ctx, order)
@@ -832,7 +832,7 @@ func (s *Service) PaymentCreateProcess(
 	}
 
 	if order.ProductType == billing.OrderType_product {
-		err = s.ProcessOrderProducts(order)
+		err = s.ProcessOrderProducts(ctx, order)
 	} else if order.ProductType == billing.OrderType_key {
 		// We should reserve keys only before payment
 		if _, err = s.ProcessOrderKeyProducts(ctx, order); err == nil {
@@ -1115,7 +1115,7 @@ func (s *Service) PaymentFormLanguageChanged(
 	order.UserAddressDataRequired = true
 
 	if order.ProductType == billing.OrderType_product {
-		err = s.ProcessOrderProducts(order)
+		err = s.ProcessOrderProducts(ctx, order)
 	} else if order.ProductType == billing.OrderType_key {
 		_, err = s.ProcessOrderKeyProducts(ctx, order)
 	}
@@ -1383,7 +1383,7 @@ func (s *Service) ProcessBillingAddress(
 	}
 
 	if order.ProductType == billing.OrderType_product {
-		err = s.ProcessOrderProducts(order)
+		err = s.ProcessOrderProducts(ctx, order)
 	} else if order.ProductType == billing.OrderType_key {
 		_, err = s.ProcessOrderKeyProducts(ctx, order)
 	}
@@ -3280,7 +3280,7 @@ func (s *Service) ProcessOrderKeyProducts(ctx context.Context, order *billing.Or
 	return platforms, nil
 }
 
-func (s *Service) ProcessOrderProducts(order *billing.Order) error {
+func (s *Service) ProcessOrderProducts(ctx context.Context, order *billing.Order) error {
 	project, err := s.project.GetById(order.Project.Id)
 	if err != nil {
 		return orderErrorProjectNotFound
@@ -3308,6 +3308,7 @@ func (s *Service) ProcessOrderProducts(order *billing.Order) error {
 		priceGroup *billing.PriceGroup
 		locale     string
 		logInfo    = "[ProcessOrderProducts] %s"
+		amount 	   float64
 	)
 
 	if order.BillingAddress != nil && order.BillingAddress.Country != "" {
@@ -3351,42 +3352,90 @@ func (s *Service) ProcessOrderProducts(order *billing.Order) error {
 
 	zap.S().Infow(fmt.Sprintf(logInfo, "try to use detected currency for order amount"), "currency", currency, "order.Uuid", order.Uuid)
 
-	// try to get order Amount in requested currency
-	amount, err := s.GetOrderProductsAmount(orderProducts, priceGroup)
-	if err != nil {
-		if priceGroup.Id == defaultPriceGroup.Id {
-			return err
-		}
-		// try to get order Amount in default currency, if it differs from requested one
-		amount, err = s.GetOrderProductsAmount(orderProducts, defaultPriceGroup)
+	if order.IsBuyForVirtualCurrency {
+		virtualAmount, err := s.GetOrderProductsAmount(orderProducts, &billing.PriceGroup{Currency: "virtual"})
 		if err != nil {
 			return err
 		}
-		zap.S().Infow(fmt.Sprintf(logInfo, "try to use default currency for order amount"), "currency", defaultCurrency, "order.Uuid", order.Uuid)
 
-		priceGroup = defaultPriceGroup
-		// converting Amount from default currency to requested
-		req := &currencies.ExchangeCurrencyCurrentForMerchantRequest{
-			From:       defaultCurrency,
-			To:         currency,
-			MerchantId: order.GetMerchantId(),
-			RateType:   curPkg.RateTypeOxr,
-			Amount:     amount,
-		}
-
-		rsp, err := s.curService.ExchangeCurrencyCurrentForMerchant(context.TODO(), req)
-
+		project, err := s.project.GetById(order.GetProjectId())
 		if err != nil {
-			zap.S().Error(
-				pkg.ErrorGrpcServiceCallFailed,
-				zap.Error(err),
-				zap.String(errorFieldService, "CurrencyRatesService"),
-				zap.String(errorFieldMethod, "ExchangeCurrencyCurrentForMerchant"),
-			)
-
-			return orderErrorConvertionCurrency
+			return err
 		}
-		amount = rsp.ExchangedAmount
+
+		if project.VirtualCurrency == nil || len(project.VirtualCurrency.Prices) == 0 {
+			return orderErrorVirtualCurrencyNotFilled
+		}
+
+		amount, err = s.GetAmountForVirtualCurrency(virtualAmount, priceGroup, project.VirtualCurrency.Prices)
+		if err != nil {
+			amount, err = s.GetAmountForVirtualCurrency(virtualAmount, defaultPriceGroup, project.VirtualCurrency.Prices)
+			if err != nil {
+				return err
+			}
+
+			priceGroup = defaultPriceGroup
+			// converting Amount from default currency to requested
+			req := &currencies.ExchangeCurrencyCurrentForMerchantRequest{
+				From:       defaultCurrency,
+				To:         currency,
+				MerchantId: order.GetMerchantId(),
+				RateType:   curPkg.RateTypeOxr,
+				Amount:     amount,
+			}
+
+			rsp, err := s.curService.ExchangeCurrencyCurrentForMerchant(ctx, req)
+
+			if err != nil {
+				zap.S().Error(
+					pkg.ErrorGrpcServiceCallFailed,
+					zap.Error(err),
+					zap.String(errorFieldService, "CurrencyRatesService"),
+					zap.String(errorFieldMethod, "ExchangeCurrencyCurrentForMerchant"),
+				)
+
+				return orderErrorConvertionCurrency
+			}
+			amount = rsp.ExchangedAmount
+		}
+	} else {
+		// try to get order Amount in requested currency
+		amount, err = s.GetOrderProductsAmount(orderProducts, priceGroup)
+		if err != nil {
+			if priceGroup.Id == defaultPriceGroup.Id {
+				return err
+			}
+			// try to get order Amount in default currency, if it differs from requested one
+			amount, err = s.GetOrderProductsAmount(orderProducts, defaultPriceGroup)
+			if err != nil {
+				return err
+			}
+			zap.S().Infow(fmt.Sprintf(logInfo, "try to use default currency for order amount"), "currency", defaultCurrency, "order.Uuid", order.Uuid)
+
+			priceGroup = defaultPriceGroup
+			// converting Amount from default currency to requested
+			req := &currencies.ExchangeCurrencyCurrentForMerchantRequest{
+				From:       defaultCurrency,
+				To:         currency,
+				MerchantId: order.GetMerchantId(),
+				RateType:   curPkg.RateTypeOxr,
+				Amount:     amount,
+			}
+
+			rsp, err := s.curService.ExchangeCurrencyCurrentForMerchant(ctx, req)
+
+			if err != nil {
+				zap.S().Error(
+					pkg.ErrorGrpcServiceCallFailed,
+					zap.Error(err),
+					zap.String(errorFieldService, "CurrencyRatesService"),
+					zap.String(errorFieldMethod, "ExchangeCurrencyCurrentForMerchant"),
+				)
+
+				return orderErrorConvertionCurrency
+			}
+			amount = rsp.ExchangedAmount
+		}
 	}
 
 	if order.User != nil && order.User.Locale != "" {
@@ -3749,7 +3798,7 @@ func (s *Service) PaymentFormPlatformChanged(ctx context.Context, req *grpc.Paym
 	order.PlatformId = req.Platform
 
 	if order.ProductType == billing.OrderType_product {
-		err = s.ProcessOrderProducts(order)
+		err = s.ProcessOrderProducts(ctx, order)
 	} else if order.ProductType == billing.OrderType_key {
 		_, err = s.ProcessOrderKeyProducts(ctx, order)
 	}

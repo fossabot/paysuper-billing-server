@@ -582,6 +582,8 @@ message Order {
     string receipt_id = 73; // unique public receipt identifier
     // @inject_tag: json:"virtual_currency_amount" bson:"virtual_currency_amount"
     double virtual_currency_amount = 74;
+    // @inject_tag: json:"is_buy_for_virtual_currency" bson:"is_buy_for_virtual_currency"
+    bool is_buy_for_virtual_currency = 75;
 }
 
 message CountryRestriction {
