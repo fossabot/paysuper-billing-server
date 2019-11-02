@@ -91,6 +91,7 @@ func (s *Service) CreateToken(
 			Currency:   req.Settings.Currency,
 			Products:   req.Settings.ProductsIds,
 			PlatformId: req.Settings.PlatformId,
+			IsBuyForVirtualCurrency: req.Settings.IsBuyForVirtualCurrency,
 		},
 		checked: &orderCreateRequestProcessorChecked{},
 	}
@@ -185,6 +186,19 @@ func (s *Service) CreateToken(
 				rsp.Message = e
 			}
 
+			return nil
+		}
+		break
+	case billing.OrderTypeVirtualCurrency:
+		err := processor.processVirtualCurrency()
+		if err != nil {
+			zap.L().Error(
+				pkg.MethodFinishedWithError,
+				zap.Error(err),
+			)
+
+			rsp.Status = pkg.ResponseStatusBadData
+			rsp.Message = err.(*grpc.ResponseErrorMessage)
 			return nil
 		}
 		break

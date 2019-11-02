@@ -388,12 +388,6 @@ func (s *Service) OrderCreateProcess(
 		}
 		break
 	case billing.OrderTypeVirtualCurrency:
-		if !processor.UserCountryExists() {
-			rsp.Status = pkg.ResponseStatusBadData
-			rsp.Message = orderErrorVirtualCurrencyUserCountryRequired
-			return nil
-		}
-
 		err := processor.processVirtualCurrency()
         if err != nil {
             zap.L().Error(
@@ -1863,6 +1857,7 @@ func (v *OrderCreateRequestProcessor) prepareOrder() (*billing.Order, error) {
 		},
 		PlatformId:  v.request.PlatformId,
 		ProductType: v.request.Type,
+		IsBuyForVirtualCurrency: v.request.IsBuyForVirtualCurrency,
 	}
 
 	if v.checked.virtualAmount > 0 {
